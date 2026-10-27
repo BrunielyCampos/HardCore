@@ -1,20 +1,20 @@
 package com.ifrn.HardCore.ServicoProduto.DTO;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 
 @Setter
 @Getter
-@AllArgsConstructor
+@NoArgsConstructor
 public class PrateleiraRequestDTO {
 
 
     @NonNull
     private int quantidade_produto;
 
-    public PrateleiraRequestDTO(@NonNull int quantidade_produto) {
+    private Long produto_id;
+
+    public PrateleiraRequestDTO(@NonNull int quantidade_produto, Long produto_id) {
         this.quantidade_produto = quantidade_produto;
+        this.produto_id = produto_id;
     }
 }

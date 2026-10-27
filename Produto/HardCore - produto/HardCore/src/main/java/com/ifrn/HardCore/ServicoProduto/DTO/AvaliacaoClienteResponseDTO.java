@@ -1,5 +1,6 @@
 package com.ifrn.HardCore.ServicoProduto.DTO;
 
+import com.ifrn.HardCore.ServicoProduto.repository.Entity.Produto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,9 +16,12 @@ public class AvaliacaoClienteResponseDTO {
 
     private String campoComentario;
 
-    public AvaliacaoClienteResponseDTO(Long id, boolean avaliacao, String campoComentario) {
+    private Produto produto_id;
+
+    public AvaliacaoClienteResponseDTO(Long id, boolean avaliacao, String campoComentario, Produto produto_id) {
         this.id = id;
         this.avaliacao = avaliacao;
         this.campoComentario = campoComentario;
+        this.produto_id = produto_id;
     }
 }

@@ -15,8 +15,12 @@ public class EstoqueResponseDTO {
     @NonNull
     private int quantidadeProduto;
 
-    public EstoqueResponseDTO(Long id, @NonNull int quantidadeProduto) {
+
+    private Long produto_id;
+
+    public EstoqueResponseDTO(Long id, @NonNull int quantidadeProduto, Long produto_id) {
         this.id = id;
         this.quantidadeProduto = quantidadeProduto;
+        this.produto_id = produto_id;
     }
 }

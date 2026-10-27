@@ -17,8 +17,11 @@ public class AvaliacaoClienteRequestDTO {
 
     private String campoComentario;
 
-    public AvaliacaoClienteRequestDTO(@NonNull boolean avaliacao, String campoComentario) {
+    private Long produto_id;
+
+    public AvaliacaoClienteRequestDTO(@NonNull boolean avaliacao, String campoComentario, Long produto_id) {
         this.avaliacao = avaliacao;
         this.campoComentario = campoComentario;
+        this.produto_id = produto_id;
     }
 }

@@ -1,26 +1,27 @@
 package com.ifrn.HardCore.ServicoProduto.repository.Entity;
 
+import com.ifrn.HardCore.ServicoProduto.repository.Entity.AvaliacaoCliente;
+import com.ifrn.HardCore.ServicoProduto.repository.Entity.Estoque;
+import com.ifrn.HardCore.ServicoProduto.repository.Entity.Prateleira;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import java.util.List;
 
-@Entity 
+@Entity
 @Table(name = "produto")
 @Data
-@NoArgsConstructor 
-@AllArgsConstructor 
+@NoArgsConstructor
 public class Produto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank 
+    @NotBlank
     private String nome;
 
     private String marca;
@@ -30,18 +31,13 @@ public class Produto {
     @NonNull
     private Double preco;
 
-    @OneToOne(mappedBy = "produto_id")
+    @OneToOne(mappedBy = "produto")
     private Estoque estoque;
 
     @ManyToOne
-    @JoinColumn(name = "prateleira_id")
+    @JoinColumn(name = "prateleira")
     private Prateleira prateleira;
 
-    @OneToMany(mappedBy = "produto_id")
+    @OneToMany(mappedBy = "produto")
     private List<AvaliacaoCliente> avaliacoes;
-
-
-
-
-
 }
