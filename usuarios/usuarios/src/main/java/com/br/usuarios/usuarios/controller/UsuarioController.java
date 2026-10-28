@@ -1,5 +1,7 @@
 package com.br.usuarios.usuarios.controller;
 
+import com.br.usuarios.usuarios.dto.UsuarioLoginRequestDTO;
+import com.br.usuarios.usuarios.dto.UsuarioLoginResponseDTO;
 import com.br.usuarios.usuarios.dto.UsuarioRequestDTO;
 import com.br.usuarios.usuarios.dto.UsuarioResponseDTO;
 import com.br.usuarios.usuarios.service.UsuarioService;
@@ -29,8 +31,8 @@ public class UsuarioController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UsuarioResponseDTO> fazerLogin(@RequestParam String email, @RequestParam String senha) {
-        UsuarioResponseDTO responseDTO = usuarioService.fazerLogin(email, senha);
+    public ResponseEntity<UsuarioLoginResponseDTO> fazerLogin(@RequestBody @Valid UsuarioLoginRequestDTO requestDTO) {
+        UsuarioLoginResponseDTO responseDTO = usuarioService.fazerLogin(requestDTO);
         return ResponseEntity.ok(responseDTO);
     }
 }

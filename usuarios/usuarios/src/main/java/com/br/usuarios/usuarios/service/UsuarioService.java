@@ -1,5 +1,8 @@
 package com.br.usuarios.usuarios.service;
 
+import com.br.usuarios.security.SecurityTokenService;
+import com.br.usuarios.usuarios.dto.UsuarioLoginRequestDTO;
+import com.br.usuarios.usuarios.dto.UsuarioLoginResponseDTO;
 import com.br.usuarios.usuarios.dto.UsuarioRequestDTO;
 import com.br.usuarios.usuarios.dto.UsuarioResponseDTO;
 import com.br.usuarios.usuarios.exception.UsuarioNaoEncontradoException;
@@ -16,6 +19,7 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final UsuarioMapper usuarioMapper;
+    private final SecurityTokenService tokenService;
 
     public UsuarioResponseDTO criarConta(UsuarioRequestDTO requestDTO) {
         Usuario usuario = usuarioMapper.toEntity(requestDTO);
@@ -25,15 +29,17 @@ public class UsuarioService {
         return usuarioMapper.toDTO(salvo);
     }
 
-    public UsuarioResponseDTO fazerLogin(String email, String senha) {
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado com o e-mail: " + email));
-        
-        if (!usuario.getSenha().equals(senha)) {
+    public UsuarioLoginResponseDTO fazerLogin(UsuarioLoginRequestDTO requestDTO) {
+        Usuario usuario = usuarioRepository.findByEmail(requestDTO.getEmail())
+            .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado com o e-mail: " + requestDTO.getEmail()));
+
+        if (!usuario.getSenha().equals(requestDTO.getSenha())) {
             throw new RuntimeException("Senha incorreta!");
         }
-        
-        return usuarioMapper.toDTO(usuario);
+
+        String role = "ROLE_" + usuario.getPerfil().name();
+        String token = tokenService.gerarToken(usuario.getEmail(), role);
+        return new UsuarioLoginResponseDTO(token);
     }
 
     public UsuarioResponseDTO buscarUsuarioPorId(Long id) {
