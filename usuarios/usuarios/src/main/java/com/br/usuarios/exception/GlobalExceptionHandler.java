@@ -7,7 +7,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.br.usuarios.usuarios.exception.UsuarioNaoEncontradoException;
-
 import java.util.HashMap;
 import java.util.Map;
 
