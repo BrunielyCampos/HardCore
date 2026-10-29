@@ -1,49 +1,44 @@
 package com.br.usuarios.administrador.controller;
 
-import com.br.usuarios.administrador.dto.AdminLoginResponseDTO;
 import com.br.usuarios.administrador.dto.AdminRequestDTO;
+import com.br.usuarios.administrador.dto.AdminLoginResponseDTO;
 import com.br.usuarios.administrador.service.AdminService;
 import com.br.usuarios.usuarios.dto.UsuarioResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import com.br.usuarios.administrador.routes.RotasAdmin;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin")
 @RequiredArgsConstructor
 public class AdminController {
 
     private final AdminService adminService;
 
-    @PostMapping("/login")
+    @PostMapping(RotasAdmin.LOGIN)
     public ResponseEntity<AdminLoginResponseDTO> fazerLoginAdmin(@RequestBody @Valid AdminRequestDTO requestDTO) {
-        AdminLoginResponseDTO response = adminService.fazerLoginAdmin(requestDTO);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(adminService.fazerLoginAdmin(requestDTO));
     }
 
-    @GetMapping("/usuarios")
+    @GetMapping(RotasAdmin.LISTAR_USUARIOS)
     public ResponseEntity<List<UsuarioResponseDTO>> listarTodosUsuarios() {
-        List<UsuarioResponseDTO> usuarios = adminService.listarTodosUsuarios();
-        return ResponseEntity.ok(usuarios);
+        return ResponseEntity.ok(adminService.listarTodosUsuarios());
     }
 
-    @GetMapping("/usuarios/entregadores")
-    public ResponseEntity<List<UsuarioResponseDTO>> listarEntregadores() {
-        List<UsuarioResponseDTO> entregadores = adminService.listarApenasEntregadores();
-        return ResponseEntity.ok(entregadores);
+    @GetMapping(RotasAdmin.LISTAR_ENTREGADORES)
+    public ResponseEntity<List<UsuarioResponseDTO>> listarApenasEntregadores() {
+        return ResponseEntity.ok(adminService.listarApenasEntregadores());
     }
 
-    @PatchMapping("/usuarios/{id}/promover-gerente")
+    @PatchMapping(RotasAdmin.PROMOVER_GERENTE)
     public ResponseEntity<UsuarioResponseDTO> promoverGerente(@PathVariable Long id) {
-        UsuarioResponseDTO responseDTO = adminService.promoverGerente(id);
-        return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(adminService.promoverGerente(id));
     }
 
-    @PatchMapping("/usuarios/{id}/promover-entregador")
+    @PatchMapping(RotasAdmin.PROMOVER_ENTREGADOR)
     public ResponseEntity<UsuarioResponseDTO> promoverEntregador(@PathVariable Long id) {
-        UsuarioResponseDTO responseDTO = adminService.promoverEntregador(id);
-        return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(adminService.promoverEntregador(id));
     }
 }

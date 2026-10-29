@@ -5,6 +5,7 @@ import com.br.usuarios.usuarios.dto.UsuarioLoginResponseDTO;
 import com.br.usuarios.usuarios.dto.UsuarioRequestDTO;
 import com.br.usuarios.usuarios.dto.UsuarioResponseDTO;
 import com.br.usuarios.usuarios.service.UsuarioService;
+import com.br.usuarios.usuarios.routes.RotasUsuario;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,27 +13,23 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/usuarios")
 @RequiredArgsConstructor
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    @PostMapping("/cadastro")
+    @PostMapping(RotasUsuario.CADASTRO)
     public ResponseEntity<UsuarioResponseDTO> criarConta(@RequestBody @Valid UsuarioRequestDTO requestDTO) {
-        UsuarioResponseDTO responseDTO = usuarioService.criarConta(requestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.criarConta(requestDTO));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(RotasUsuario.BUSCAR_POR_ID)
     public ResponseEntity<UsuarioResponseDTO> buscarPorId(@PathVariable Long id) {
-        UsuarioResponseDTO responseDTO = usuarioService.buscarUsuarioPorId(id);
-        return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(usuarioService.buscarUsuarioPorId(id));
     }
 
-    @PostMapping("/login")
+    @PostMapping(RotasUsuario.LOGIN)
     public ResponseEntity<UsuarioLoginResponseDTO> fazerLogin(@RequestBody @Valid UsuarioLoginRequestDTO requestDTO) {
-        UsuarioLoginResponseDTO responseDTO = usuarioService.fazerLogin(requestDTO);
-        return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(usuarioService.fazerLogin(requestDTO));
     }
 }
