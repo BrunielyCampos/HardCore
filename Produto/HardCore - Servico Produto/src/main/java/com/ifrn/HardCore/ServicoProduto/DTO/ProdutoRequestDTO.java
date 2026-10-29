@@ -1,6 +1,7 @@
 package com.ifrn.HardCore.ServicoProduto.DTO;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Setter
@@ -15,10 +16,10 @@ public class ProdutoRequestDTO {
 
     private String categoria;
 
-    @NonNull
+    @NotNull
     private Double preco;
 
-    public ProdutoRequestDTO(String nome, String marca, String categoria, @NonNull Double preco){
+    public ProdutoRequestDTO(String nome, String marca, String categoria, @NotNull Double preco){
         this.nome = nome;
         this.marca = marca;
         this.categoria = categoria;

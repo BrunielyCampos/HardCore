@@ -1,6 +1,7 @@
 package com.ifrn.HardCore.ServicoProduto.repository.Entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -17,7 +18,7 @@ public class Prateleira {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NonNull
+    @NotNull
     private int quantidade_produto;
 
     @OneToMany(mappedBy = "prateleira")

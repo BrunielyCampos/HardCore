@@ -1,25 +1,22 @@
 package com.ifrn.HardCore.ServicoProduto.DTO;
 
+import com.ifrn.HardCore.ServicoProduto.repository.Entity.Produto;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.Setter;
 
 @NoArgsConstructor
 @Getter
 @Setter
-public class EstoqueResponseDTO {
+public class EstoqueRequestDTO {
 
-    private Long id;
-
-    @NonNull
+    @NotNull
     private int quantidadeProduto;
-
 
     private Long produto_id;
 
-    public EstoqueResponseDTO(Long id, @NonNull int quantidadeProduto, Long produto_id) {
-        this.id = id;
+    public EstoqueRequestDTO(@NotNull int quantidadeProduto, Long produto_id) {
         this.quantidadeProduto = quantidadeProduto;
         this.produto_id = produto_id;
     }
