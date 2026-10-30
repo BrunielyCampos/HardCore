@@ -1,11 +1,13 @@
 package com.br.usuarios.administrador.model;
 
+import java.util.List;
+import com.br.usuarios.usuarios.model.Usuario;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 @Entity
-@Table(name = "tb_admin")
+@Table(name = "administrador")
 @Data
 @RequiredArgsConstructor
 public class Admin {
@@ -19,4 +21,7 @@ public class Admin {
 
     @Column(nullable = false)
     private String senha;
+
+    @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
+    private List<Usuario> usuarios;
 }

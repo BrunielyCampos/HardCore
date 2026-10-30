@@ -3,9 +3,9 @@ package com.br.usuarios.usuarios.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-
 import java.util.Date;
 import org.springframework.format.annotation.DateTimeFormat;
+import com.br.usuarios.administrador.model.Admin;
 
 @Data
 @Entity
@@ -36,4 +36,8 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UsuarioEnum perfil;
+
+    @ManyToOne
+    @JoinColumn(name = "admin_id")
+    private Admin admin;
 }

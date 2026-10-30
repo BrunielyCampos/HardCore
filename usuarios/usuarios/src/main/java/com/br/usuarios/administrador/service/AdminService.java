@@ -22,7 +22,6 @@ public class AdminService {
 
     private final AdminRepository adminRepository;
     private final UsuarioRepository usuarioRepository;
-  
     private final UsuarioMapper usuarioMapper;
     private final SecurityTokenService tokenService;
 

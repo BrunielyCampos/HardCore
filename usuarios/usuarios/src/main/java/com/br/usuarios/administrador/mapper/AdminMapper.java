@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 public interface AdminMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "usuarios", ignore = true)
     Admin toEntity(AdminRequestDTO dto);
 
     AdminResponseDTO toDTO(Admin admin);
