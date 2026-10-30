@@ -14,10 +14,8 @@ public class PrateleiraRequestDTO {
     @NotNull
     private int quantidade_produto;
 
-    private List<Long> produtoIds;
 
-    public PrateleiraRequestDTO( @NotNull int quantidade_produto, List<Long> produtoIds) {
+    public PrateleiraRequestDTO( @NotNull int quantidade_produto) {
         this.quantidade_produto = quantidade_produto;
-        this.produtoIds = produtoIds;
     }
 }

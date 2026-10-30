@@ -16,9 +16,9 @@ public class AvaliacaoClienteResponseDTO {
 
     private String campoComentario;
 
-    private Produto produto_id;
+    private Long produto_id;
 
-    public AvaliacaoClienteResponseDTO(Long id, boolean avaliacao, String campoComentario, Produto produto_id) {
+    public AvaliacaoClienteResponseDTO(Long id, boolean avaliacao, String campoComentario, Long produto_id) {
         this.id = id;
         this.avaliacao = avaliacao;
         this.campoComentario = campoComentario;

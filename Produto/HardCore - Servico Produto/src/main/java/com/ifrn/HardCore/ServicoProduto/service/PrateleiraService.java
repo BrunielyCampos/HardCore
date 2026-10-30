@@ -1,11 +1,13 @@
 package com.ifrn.HardCore.ServicoProduto.service;
 
+import com.ifrn.HardCore.ServicoProduto.DTO.PrateleiraRequestDTO;
 import com.ifrn.HardCore.ServicoProduto.DTO.PrateleiraResponseDTO;
 import com.ifrn.HardCore.ServicoProduto.DTO.ProdutoResponseDTO;
 import com.ifrn.HardCore.ServicoProduto.repository.Entity.Prateleira;
 import com.ifrn.HardCore.ServicoProduto.repository.Entity.Produto;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,14 +20,11 @@ public class PrateleiraService {
         this.prateleira = prateleira;
     }
 
-    public Prateleira ToEntity(PrateleiraResponseDTO dto){
+    public Prateleira ToEntity(PrateleiraRequestDTO dto){
         Prateleira prat = new Prateleira();
 
-        prat.setId(dto.getId());
         prat.setQuantidade_produto(dto.getQuantidade_produto());
-
-        //Falta coisa lista de ids de produto.
-
+        prat.setProdutos(new ArrayList<>());
         return prat;
     }
 
