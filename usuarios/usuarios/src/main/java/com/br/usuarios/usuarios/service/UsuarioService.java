@@ -11,15 +11,18 @@ import com.br.usuarios.usuarios.model.Usuario;
 import com.br.usuarios.usuarios.model.UsuarioEnum;
 import com.br.usuarios.usuarios.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
 
-    private final UsuarioRepository usuarioRepository;
+    @Autowired
     private final UsuarioMapper usuarioMapper;
     private final SecurityTokenService tokenService;
+    private final UsuarioRepository usuarioRepository;
 
     public UsuarioResponseDTO criarConta(UsuarioRequestDTO requestDTO) {
         Usuario usuario = usuarioMapper.toEntity(requestDTO);

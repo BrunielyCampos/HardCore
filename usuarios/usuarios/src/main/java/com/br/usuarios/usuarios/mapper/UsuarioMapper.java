@@ -12,6 +12,7 @@ public interface UsuarioMapper {
 
     @Mapping(target = "perfil", expression = "java(UsuarioEnum.CLIENTE)")
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "admin", ignore = true)
     Usuario toEntity(UsuarioRequestDTO dto);
     
     UsuarioResponseDTO toDTO(Usuario usuario);
