@@ -27,7 +27,7 @@ public class Entrega {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado_entrega", nullable = false)
-    private EstadoEntregaEnum estadoEntrega;
+    private EntregaEnum estadoEntrega;
 
     @Column(name = "confirmacao_cliente")
     private Boolean confirmacaoCliente;
