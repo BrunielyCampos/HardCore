@@ -33,5 +33,5 @@ build/
 .vscode/
 
 # Configurações do ambiente
-.env
+**/.env
 *.env
