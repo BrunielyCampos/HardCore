@@ -2,7 +2,6 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import caveira from "../assets/CatalogoAsset/image 13.png";
 import hardocre3 from "../assets/CatalogoAsset/Hardocre 3.png";
 import hardocre4 from "../assets/CatalogoAsset/Hardocre 4.png";
-import rectangle14 from "../assets/CatalogoAsset/Rectangle 14.svg";
 import chevronDown from "../assets/CatalogoAsset/chevron-down.svg";
 import vector3 from "../assets/CatalogoAsset/Vector 3.svg";
 
@@ -19,30 +18,106 @@ interface FormDataState {
 }
 
 const inputFields = [
-  { id: "name", label: "Nome", type: "text" },
-  { id: "surname", label: "Sobrenome", type: "text" },
-  { id: "password", label: "Senha", type: "password" },
-  { id: "email", label: "E-mail", type: "email" },
-  { id: "cpf", label: "CPF", type: "text" },
-  { id: "rg", label: "RG", type: "text" },
+  { id: "name", label: "Nome", type: "text", animClass: "anim-nome" },
+  { id: "surname", label: "Sobrenome", type: "text", animClass: "anim-sobrenome" },
+  { id: "password", label: "Senha", type: "password", animClass: "anim-senha" },
+  { id: "email", label: "E-mail", type: "email", animClass: "anim-email" },
+  { id: "cpf", label: "CPF", type: "text", animClass: "anim-cpf" },
+  { id: "rg", label: "RG", type: "text", animClass: "anim-rg" },
 ];
 
 interface CheckboxProps {
   id: string;
   checked: boolean;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onChange: (id: string, checked: boolean) => void;
+  required?: boolean;
 }
 
-function Checkbox({ id, checked, onChange }: CheckboxProps) {
+function Checkbox({ id, checked, onChange, required = false }: CheckboxProps) {
   return (
-    <input
-      id={id}
-      type="checkbox"
-      checked={checked}
-      onChange={onChange}
-      className="relative h-[24px] w-[24px] shrink-0 cursor-pointer appearance-none rounded-[6px_3px_6px_3px] border-[1px] border-solid border-[#CCCCCC] bg-[linear-gradient(117deg,#2F2F2F_0%,#959595_100%)] checked:bg-[#980808] checked:after:absolute checked:after:left-[7px] checked:after:top-[3px] checked:after:h-[12px] checked:after:w-[8px] checked:after:rotate-45 checked:after:border-b-[2.25px] checked:after:border-r-[2.25px] checked:after:border-white checked:after:content-['']"
-      aria-label={id}
-    />
+    <div className="relative flex h-[25px] w-[25px] shrink-0 items-center justify-center">
+      <input
+        id={id}
+        type="checkbox"
+        checked={checked}
+        required={required}
+        onChange={(e) => onChange(id, e.target.checked)}
+        aria-label={id}
+        className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+      />
+
+      <span
+        className="
+          pointer-events-none flex h-full w-full items-center justify-center
+          rounded-[6px_3px_6px_3px]
+          border border-[#AAAAAA]
+          bg-gradient-to-br from-[#2F2F2F] to-[#777777]
+          shadow-inner
+          transition-all duration-300 ease-out
+          peer-checked:border-[#FF3333]
+          peer-checked:bg-none
+          peer-checked:bg-[#980808]
+          peer-checked:shadow-[0_0_12px_rgba(220,20,20,0.35)]
+        "
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          className={`
+            h-[17px] w-[17px] text-white
+            transition-all duration-300 ease-out
+            ${checked ? "scale-100 opacity-100 rotate-0 anim-checkbox-check" : "scale-50 opacity-0 -rotate-45"}
+          `}
+        >
+          <path
+            d="M5 12.5L10 17L19 7"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
+    </div>
+  );
+}
+
+interface AnimatedInputProps {
+  id: string;
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  animClass: string;
+}
+
+function AnimatedInput({ id, label, type = "text", value, onChange, animClass }: AnimatedInputProps) {
+  const [isFocused, setIsFocused] = useState(false);
+  const hasContent = value.length > 0;
+  const isActive = isFocused || hasContent;
+
+  return (
+    <div className="relative flex h-[61.09px] w-[371px] items-center rounded-[13.57px_3.18px_15px_4.45px] border-[0.64px] border-solid border-[#AAAAAA] bg-[linear-gradient(117deg,#2F2F2F_0%,#959595_100%)] px-[8.27px]">
+      <input
+        id={id}
+        name={id}
+        type={type}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        required
+        className="peer h-full w-full bg-transparent pt-4 font-['Inter',sans-serif] text-[23.5px] italic text-white focus:outline-none"
+      />
+      <label
+        htmlFor={id}
+        className={`absolute left-[15px] font-['Inter',sans-serif] text-[23.5px] italic text-white/70 transition-all pointer-events-none origin-top-left ${
+          isActive ? `${animClass} text-white` : "top-1/2 -translate-y-1/2"
+        }`}
+      >
+        {label}
+      </label>
+    </div>
   );
 }
 
@@ -60,17 +135,27 @@ export function Cadastro() {
   });
 
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = event.target;
-    const checked = (event.target as HTMLInputElement).checked;
-
+    const { name, value } = event.target;
     setFormData((current) => ({
       ...current,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
+    }));
+  };
+
+  const handleCheckboxChange = (id: string, checked: boolean) => {
+    setFormData((current) => ({
+      ...current,
+      [id]: checked,
     }));
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!formData.terms) {
+      alert("Você precisa aceitar os termos de uso para continuar.");
+      return;
+    }
+    console.log("Dados submetidos:", formData);
   };
 
   return (
@@ -85,7 +170,7 @@ export function Cadastro() {
           src={caveira}
         />
         <img
-          className="absolute left-[368.93px] top-[1024.15px] h-[204.22px] w-[213.84px] object-contain"
+          className="absolute left-[380.93px] top-[1050.15px] h-[204.22px] w-[213.84px] object-contain"
           alt=""
           aria-hidden="true"
           src={vector3}
@@ -106,32 +191,23 @@ export function Cadastro() {
             </p>
           </div>
 
-          {/* Grelha de Inputs */}
+          {/* Grelha de Inputs Dinâmica com Animação */}
           <div className="z-10 mt-[70px] grid grid-cols-2 gap-x-[9px] gap-y-[26px]">
             {inputFields.map((field) => (
-              <div
+              <AnimatedInput
                 key={field.id}
-                className="flex h-[61.09px] w-[371px] items-center rounded-[13.57px_3.18px_15px_4.45px] border-[0.64px] border-solid border-[#AAAAAA] bg-[linear-gradient(117deg,#2F2F2F_0%,#959595_100%)] px-[8.27px]"
-              >
-                <label htmlFor={field.id} className="sr-only">
-                  {field.label}
-                </label>
-                <input
-                  id={field.id}
-                  name={field.id}
-                  type={field.type}
-                  value={formData[field.id as keyof FormDataState] as string}
-                  onChange={handleChange}
-                  required
-                  placeholder={field.label}
-                  className="h-full w-full bg-transparent font-['Inter',sans-serif] text-[23.5px] italic text-white placeholder:text-white focus:outline-none"
-                />
-              </div>
+                id={field.id}
+                label={field.label}
+                type={field.type}
+                value={formData[field.id as keyof FormDataState] as string}
+                onChange={handleChange}
+                animClass={field.animClass}
+              />
             ))}
           </div>
 
-          {/* Dropdown Tipo de Conta */}
-          <div className="z-10 mt-[26px] flex h-[61.26px] w-[372px] flex-col justify-center rounded-[13.61px_3.19px_15.04px_4.47px] border-[0.64px] border-solid border-[#AAAAAA] bg-[linear-gradient(117deg,#2F2F2F_0%,#959595_100%)] px-[8.30px] py-[7.66px]">
+          {/* Dropdown Tipo de Conta Nativo Otimizado */}
+          <div className="z-10 mt-[26px] flex h-[61.26px] w-[372px] flex-col justify-center rounded-[13.61px_3.19px_15.04px_4.47px] border-[0.64px] border-solid border-[#AAAAAA] bg-[linear-gradient(117deg,#2F2F2F_0%,#959595_100%)] px-[8.30px] py-[7.66px] relative">
             <label
               htmlFor="accountType"
               className="font-['Inter',sans-serif] text-[8.30px] italic text-[#CCCCCC]"
@@ -145,56 +221,64 @@ export function Cadastro() {
                 value={formData.accountType}
                 onChange={handleChange}
                 required
-                className="absolute inset-0 z-20 h-full w-full cursor-pointer opacity-0"
+                className="w-full bg-transparent font-['Inter',sans-serif] text-[17.87px] font-semibold italic text-white focus:outline-none cursor-pointer appearance-none"
               >
-                <option value="Pessoa Física">Pessoa Física</option>
-                <option value="Pessoa Jurídica">Pessoa Jurídica</option>
+                <option value="Pessoa Física" className="bg-[#2F2F2F] text-white">Pessoa Física</option>
+                <option value="Pessoa Jurídica" className="bg-[#2F2F2F] text-white">Pessoa Jurídica</option>
               </select>
-              <span className="relative z-10 font-['Inter',sans-serif] text-[17.87px] font-semibold italic text-white">
-                {formData.accountType}
-              </span>
               <img src={chevronDown} className="pointer-events-none absolute right-2 z-10 h-[12.76px] w-[12.76px] object-contain" alt="" />
             </div>
           </div>
 
           {/* Checkboxes e Termos */}
           <div className="z-10 mt-[40px] flex w-[730px] flex-col gap-[33px] pl-[5px]">
-            <div className="flex items-center gap-[9px]">
-              <Checkbox id="marketing" checked={formData.marketing} onChange={handleChange} />
-              <label htmlFor="marketing" className="flex cursor-pointer items-center gap-[6px] font-['Metal_Mania',cursive] text-[20px] text-white">
+            <label className="flex cursor-pointer items-center gap-[9px] font-['Metal_Mania',cursive] text-[18px] leading-relaxed text-white transition-colors duration-200 hover:text-[#FF7777]">
+              <Checkbox id="marketing" checked={formData.marketing} onChange={handleCheckboxChange} />
+              <span className="flex items-center gap-[6px]">
                 Aceito receber comunicação de marketing da
-                <img className="h-[46.25px] w-[82.22px] object-contain" alt="" src={hardocre3} />
-              </label>
-            </div>
+                <img
+                  className="h-[40px] w-[75px] object-contain"
+                  alt="Hardcore Logo 3"
+                  src={hardocre3}
+                />
+              </span>
+            </label>
 
-            <div className="flex items-center gap-[9px]">
-              <Checkbox id="terms" checked={formData.terms} onChange={handleChange} />
-              <label htmlFor="terms" className="flex cursor-pointer flex-wrap items-center font-['Metal_Mania',cursive] text-[20px] text-white">
+            <label className="flex cursor-pointer items-start gap-[9px] font-['Metal_Mania',cursive] text-[18px] leading-relaxed text-white transition-colors duration-200 hover:text-[#FF7777]">
+              <Checkbox id="terms" checked={formData.terms} onChange={handleCheckboxChange} required={true} />
+              <span className="flex flex-wrap items-center">
                 <span className="mr-[5px]">Estou ciente e CONCORDO com os</span>
-                <a href="#" className="underline decoration-white hover:text-gray-300">
+                <a href="#" onClick={(e) => e.stopPropagation()} className="underline decoration-white underline-offset-4 transition-colors hover:text-[#FF5555]">
                   termos de aceite
                 </a>
                 <span className="mx-[5px]">e</span>
-                <a href="#" className="underline decoration-white hover:text-gray-300">
+                <a href="#" onClick={(e) => e.stopPropagation()} className="underline decoration-white underline-offset-4 transition-colors hover:text-[#FF5555]">
                   políticas de privacidade
                 </a>
                 <span className="mx-[5px]">da</span>
-                <img className="h-[46.25px] w-[82.22px] object-contain" alt="" src={hardocre4} />
-              </label>
-            </div>
+                <img
+                  className="h-[40px] w-[75px] object-contain inline-block align-middle"
+                  alt="Hardcore Logo 4"
+                  src={hardocre4}
+                />
+              </span>
+            </label>
           </div>
 
-          {/* Botão Submeter */}
+          {/* Botão de Cadastro com as exatas dimensões e estados do Figma (492x102 e Inter 35.16px) */}
           <button
             type="submit"
-            className="relative z-10 mt-[45px] flex h-[83.96px] w-[405px] cursor-pointer items-center justify-center border-none bg-transparent"
+            className="btn-rectangle-anim relative z-10 mt-[45px] flex h-[102px] w-[492px] cursor-pointer items-center justify-center rounded-[10px] border-none shadow-md transition-transform duration-200 active:scale-95"
           >
-            <img
-              className="absolute inset-0 h-full w-full object-fill"
-              alt=""
-              src={rectangle14}
-            />
-            <span className="relative z-20 font-['Inter',sans-serif] text-[28.94px] font-bold text-white">
+            <span
+              style={{
+                fontFamily: 'Inter',
+                fontSize: '35.16px',
+                fontWeight: '700',
+                wordWrap: 'break-word',
+              }}
+              className="relative z-20 text-white"
+            >
               Criar Conta
             </span>
           </button>
