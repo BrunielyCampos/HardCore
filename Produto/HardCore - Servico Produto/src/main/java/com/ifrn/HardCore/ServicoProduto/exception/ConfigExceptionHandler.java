@@ -26,4 +26,10 @@ public class ConfigExceptionHandler {
         return ex.getMessage();
     }
 
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(PrateleiraNaoEncontradaException.class)
+    public  String hadel(PrateleiraNaoEncontradaException ex){
+        return ex.getMessage();
+    }
+
 }

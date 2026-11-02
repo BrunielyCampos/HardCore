@@ -10,10 +10,9 @@ import lombok.NonNull;
 import java.util.List;
 
 @Entity
-@Table(name = "estoque")
+@Table(name = "TB_estoque")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class Estoque {
 
     @Id
@@ -26,4 +25,10 @@ public class Estoque {
     @OneToOne
     @JoinColumn(name = "produto_id")
     private Produto produto;
+
+    public Estoque(Long id, int quantidadeProduto, Produto produto) {
+        this.id = id;
+        this.quantidadeProduto = quantidadeProduto;
+        this.produto = produto;
+    }
 }

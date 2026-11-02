@@ -5,6 +5,7 @@ import com.ifrn.HardCore.ServicoProduto.DTO.PrateleiraResponseDTO;
 import com.ifrn.HardCore.ServicoProduto.DTO.ProdutoResponseDTO;
 import com.ifrn.HardCore.ServicoProduto.repository.Entity.Prateleira;
 import com.ifrn.HardCore.ServicoProduto.repository.Entity.Produto;
+import com.ifrn.HardCore.ServicoProduto.repository.PrateleiraRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -13,20 +14,17 @@ import java.util.stream.Collectors;
 
 @Service
 public class PrateleiraService {
-    private Prateleira prateleira;
+    private PrateleiraRepository repository;
 
-
-    public PrateleiraService(Prateleira prateleira) {
-        this.prateleira = prateleira;
+    public PrateleiraService(PrateleiraRepository repository) {
+        this.repository = repository;
     }
 
     public Prateleira ToEntity(PrateleiraRequestDTO dto){
-        Prateleira prat = new Prateleira();
-
-        prat.setQuantidade_produto(dto.getQuantidade_produto());
-        prat.setProdutos(new ArrayList<>());
-        return prat;
+        return new Prateleira(null,dto.getQuantidade_produto());
     }
+
+    
 
     public PrateleiraResponseDTO ToResponseDTo(Prateleira prat){
         PrateleiraResponseDTO dto = new PrateleiraResponseDTO();
@@ -34,8 +32,8 @@ public class PrateleiraService {
         dto.setId(prat.getId());
         dto.setQuantidade_produto(prat.getQuantidade_produto());
 
-        if (prateleira.getProdutos() != null) {
-            List<Long> ids = prateleira.getProdutos().stream()
+        if (prat.getProdutos() != null) {
+            List<Long> ids = prat.getProdutos().stream()
                     .map(Produto::getId)
                     .collect(Collectors.toList());
             dto.setProdutoIds(ids);
