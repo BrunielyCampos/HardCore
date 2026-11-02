@@ -8,7 +8,6 @@ import com.hardcore.entrega.entrega.model.Entrega;
 import com.hardcore.entrega.entrega.model.EntregaEnum;
 import com.hardcore.entrega.entrega.repository.EntregaRepository;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -21,11 +20,18 @@ public class EntregaService {
     @Autowired
     private final EntregaMapper entregaMapper;
     private final EntregaRepository entregaRepository;
+    private final NotificacaoEntregaProducer notificacaoProducer;
 
     public EntregaResponseDTO atribuirEntrega(EntregaRequestDTO requestDTO) {
         Entrega entrega = entregaMapper.toEntity(requestDTO);
-    
         Entrega salva = entregaRepository.save(entrega);
+
+        // Comunicação Assíncrona: Notifica o entregador via RabbitMQ sem bloquear a resposta
+        notificacaoProducer.enviarNotificacaoParaEntregador(
+            salva.getIdEntregador(), 
+            "Nova entrega atribuída para o endereço: " + salva.getEnderecoDestino()
+        );
+
         return entregaMapper.toDTO(salva);
     }
 
@@ -49,7 +55,9 @@ public class EntregaService {
     }
 
     public void confirmarRecebimento(Long idEntrega, Boolean recebeu) {
-        Entrega entrega = buscarPorId(idEntrega);
+        Entrega entrega = entregaRepository.findById(idEntrega)
+                .orElseThrow(() -> new EntregaNaoEncontradaException("Entrega com ID " + idEntrega + " não encontrada."));
+        
         entrega.setConfirmacaoCliente(recebeu);
         if (recebeu) {
             entrega.setEstadoEntrega(EntregaEnum.ENTREGA_FEITA);
