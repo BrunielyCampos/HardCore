@@ -26,7 +26,6 @@ public class EntregaService {
         Entrega entrega = entregaMapper.toEntity(requestDTO);
         Entrega salva = entregaRepository.save(entrega);
 
-        // Comunicação Assíncrona: Notifica o entregador via RabbitMQ sem bloquear a resposta
         notificacaoProducer.enviarNotificacaoParaEntregador(
             salva.getIdEntregador(), 
             "Nova entrega atribuída para o endereço: " + salva.getEnderecoDestino()
