@@ -1,0 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Mate+SC&family=Metal+Mania&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import "tailwindcss";
+
+.btn-rectangle-anim {
+  background-color: #FF0000;
+  transition: background-color 0.3s linear;
+}
+
+.btn-rectangle-anim:hover {
+  animation: kf_266_209_background-color_0 0.3s linear forwards;
+}
+
+@keyframes kf_266_209_background-color_0 {
+  0% { animation-timing-function: ease-out; background-color: #FF0000; }
+  100% { background-color: #FF6C6C; }
+}
+
+.btn-rectangle-anim:active {
+  background-color: #5D0000 !important;
+}
