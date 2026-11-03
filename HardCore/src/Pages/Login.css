@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Metal+Mania&display=swap');
+@import "tailwindcss";
+
+/* Animações dos Inputs (Login) */
+.anim-login-field { 
+  animation: kf_login_anim 0.3s linear forwards; 
+}
+.anim-senha-field { 
+  animation: kf_senha_anim 0.3s linear forwards; 
+}
+
+@keyframes kf_login_anim {
+  0% { translate: 0px 0px; scale: 1 1; }
+  100% { translate: -5px -20px; scale: 0.6 0.6; }
+}
+
+@keyframes kf_senha_anim {
+  0% { translate: 0px 0px; scale: 1 1; }
+  100% { translate: -5px -20px; scale: 0.6 0.6; }
+}
+
+/* Animação do Botão (Reaproveitada do seu padrão) */
+.btn-rectangle-anim {
+  background-color: #FF0000;
+  transition: background-color 0.3s linear;
+}
+
+.btn-rectangle-anim:hover {
+  animation: kf_btn_hover 0.3s linear forwards;
+}
+
+@keyframes kf_btn_hover {
+  0% { animation-timing-function: ease-out; background-color: #FF0000; }
+  100% { background-color: #FF6C6C; }
+}
+
+.btn-rectangle-anim:active {
+  background-color: #5D0000 !important;
+}

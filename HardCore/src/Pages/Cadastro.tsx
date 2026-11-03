@@ -4,6 +4,7 @@ import hardocre3 from "../assets/CatalogoAsset/Hardocre 3.png";
 import hardocre4 from "../assets/CatalogoAsset/Hardocre 4.png";
 import chevronDown from "../assets/CatalogoAsset/chevron-down.svg";
 import vector3 from "../assets/CatalogoAsset/Vector 3.svg";
+import "./Cadastro.css";
 
 interface FormDataState {
   name: string;
