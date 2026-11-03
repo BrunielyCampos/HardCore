@@ -47,6 +47,8 @@ public class EstoqueService {
         return toResponseDTO(salvo);
     }
 
+    //to do: listar por menor valor armazenado ou maior;
+
 
     public Estoque toEntity(@Valid EstoqueRequestDTO dto){
         Produto produto = produtoRepository.findById(dto.getProduto_id()).orElseThrow(() -> new ProdutoNaoEncontradoException(dto.getProduto_id()));

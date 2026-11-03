@@ -1,15 +1,20 @@
 package com.ifrn.HardCore.ServicoProduto.service;
 
+import com.ifrn.HardCore.ServicoProduto.DTO.EstoqueResponseDTO;
 import com.ifrn.HardCore.ServicoProduto.DTO.PrateleiraRequestDTO;
 import com.ifrn.HardCore.ServicoProduto.DTO.PrateleiraResponseDTO;
 import com.ifrn.HardCore.ServicoProduto.exception.EstoqueNaoEncontradoException;
+import com.ifrn.HardCore.ServicoProduto.exception.ProdutoNaoEncontradoException;
 import com.ifrn.HardCore.ServicoProduto.repository.Entity.Estoque;
 import com.ifrn.HardCore.ServicoProduto.repository.Entity.Prateleira;
 import com.ifrn.HardCore.ServicoProduto.repository.Entity.Produto;
 import com.ifrn.HardCore.ServicoProduto.repository.EstoqueRepository;
 import com.ifrn.HardCore.ServicoProduto.repository.PrateleiraRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,18 +40,38 @@ public class PrateleiraService {
 
     //To do: Listar prateleiraById
 
-    /*
-        public PrateleiraResponseDTO TransferirParaPrateleira(Long idProduto, Long idPrateleira,int qtdTransferencia){
-            //To do: Antes preciso arrumar o relacionamento com produto.
+    @Transactional
+    public PrateleiraResponseDTO transferirParaPrateleira(Long produtoId, int quantidade) {
+
+        Estoque estoque =
+                estoqueRepository.findByProdutoId(produtoId).orElseThrow(() -> new EstoqueNaoEncontradoException(produtoId));
+
+        Optional<Prateleira> prateleira = repository.findByProdutosId(produtoId);
+
+
+        // 2. Verificar se existe estoque suficiente
+
+        Prateleira pratAux = null;
+
+        if (prateleira.isPresent()){
+            estoque.setQuantidadeProduto(estoque.getQuantidadeProduto() - quantidade);
+
+            pratAux = prateleira.get();
+
+            pratAux.setQuantidade_produto(pratAux.getQuantidade_produto() + quantidade);
         }
-    */
+        else {
+            
+        }
 
-    public Long BuscarIdProdutoEstoque(Long id){
-       Estoque estoqueid =
-               estoqueRepository.findByProdutoId(id).orElseThrow(() -> new EstoqueNaoEncontradoException(id));
 
-       return estoqueid.getId();
+        // 5. Se não estiver, associar o produto à prateleira
+
+        // 6. Atualizar a quantidade disponível na prateleira
+
+        // 7. Descontar a quantidade do estoque
     }
+
 
     public Prateleira ToEntity(PrateleiraRequestDTO dto){
         return new Prateleira(null,dto.getQuantidade_produto());
