@@ -2,9 +2,12 @@ package com.ifrn.HardCore.ServicoProduto.service;
 
 import com.ifrn.HardCore.ServicoProduto.DTO.EstoqueRequestDTO;
 import com.ifrn.HardCore.ServicoProduto.DTO.EstoqueResponseDTO;
+import com.ifrn.HardCore.ServicoProduto.DTO.PrateleiraRequestDTO;
+import com.ifrn.HardCore.ServicoProduto.DTO.PrateleiraResponseDTO;
 import com.ifrn.HardCore.ServicoProduto.exception.EstoqueNaoEncontradoException;
 import com.ifrn.HardCore.ServicoProduto.exception.ProdutoNaoEncontradoException;
 import com.ifrn.HardCore.ServicoProduto.repository.Entity.Estoque;
+import com.ifrn.HardCore.ServicoProduto.repository.Entity.Prateleira;
 import com.ifrn.HardCore.ServicoProduto.repository.Entity.Produto;
 import com.ifrn.HardCore.ServicoProduto.repository.EstoqueRepository;
 import com.ifrn.HardCore.ServicoProduto.repository.ProdutoRepository;
@@ -22,8 +25,8 @@ public class EstoqueService {
         this.repository = estoque;
     }
 
-    public List<EstoqueResponseDTO> listarEstoque(List<Long> ids){
-        List<Estoque> estoques = repository.findAllById(ids);
+    public List<EstoqueResponseDTO> listarEstoque(){
+        List<Estoque> estoques = repository.findAll();
 
         return estoques.stream().map(this::toResponseDTO).toList();
     }
