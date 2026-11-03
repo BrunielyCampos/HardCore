@@ -165,13 +165,13 @@ export function Cadastro() {
         
         {/* Fundo e Grafismos Absolutos */}
         <img
-          className="absolute left-0 top-0 h-[1251px] w-[703px] object-cover"
+          className="fixed left-0 -top-10 h-[1251px] w-[703px] object-cover"
           style={{ left: '-120px' }}
           alt=""
           src={caveira}
         />
-        <img
-          className="absolute left-[380.93px] top-[1050.15px] h-[204.22px] w-[213.84px] object-contain"
+       <img
+          className="fixed left-[380.93px] -bottom-[50px] h-[204.22px] w-[213.84px] object-contain z-0"
           alt=""
           aria-hidden="true"
           src={vector3}
@@ -266,7 +266,7 @@ export function Cadastro() {
             </label>
           </div>
 
-          {/* Botão de Cadastro com as exatas dimensões e estados do Figma (492x102 e Inter 35.16px) */}
+  
           <button
             type="submit"
             className="btn-rectangle-anim relative z-10 mt-[45px] flex h-[102px] w-[492px] cursor-pointer items-center justify-center rounded-[10px] border-none shadow-md transition-transform duration-200 active:scale-95"

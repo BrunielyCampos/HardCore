@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import DepartamentoButton from '../BotoesHeader/DepartamentoButton';
 import CuponsButton from '../BotoesHeader/CuponsButton';
 import MaisVendidoButton from '../BotoesHeader/MaisVendidosButton';
@@ -106,7 +107,8 @@ export default function HeaderAnimado({ variant = 1 }: HeaderAnimadoProps) {
           <img src={iconUser} alt="Perfil" className="h-full w-full object-contain" />
         </div>
         <span className="font-['Inter'] text-[18.85px] font-bold text-white leading-tight">
-          Entre ou<br />Cadastre-se
+          <Link to="/login" className="hover:text-[#B3B3B3] transition-colors cursor-pointer">Entre</Link> ou<br />
+          <Link to="/cadastro" className="hover:text-[#B3B3B3] transition-colors cursor-pointer">Cadastre-se</Link>
         </span>
       </div>
 

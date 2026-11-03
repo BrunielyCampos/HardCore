@@ -82,7 +82,7 @@ export default function Login() {
         
         {/* Imagem de Fundo (Soldado) */}
         <img
-          className="absolute right-[-100px] top-0 h-[1262px] w-[1262px] object-cover"
+          className="fixed right-[-100px] -top-45 h-[1262px] w-[1262px] object-cover"
           alt="Background"
           src={bgImage}
         />
