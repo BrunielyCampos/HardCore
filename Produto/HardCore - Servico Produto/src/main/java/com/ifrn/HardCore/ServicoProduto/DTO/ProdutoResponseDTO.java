@@ -23,11 +23,15 @@ public class ProdutoResponseDTO {
     @NotNull
     private Double preco;
 
-    public ProdutoResponseDTO(Long id, String nome, String marca, String categoria, @NotNull Double preco) {
+    private Long idPrateleira;
+
+    public ProdutoResponseDTO(Long id, String nome, String marca, String categoria, @NotNull Double preco,
+                              Long idPrateleira) {
         this.id = id;
         this.nome = nome;
         this.marca = marca;
         this.categoria = categoria;
         this.preco = preco;
+        this.idPrateleira = idPrateleira;
     }
 }

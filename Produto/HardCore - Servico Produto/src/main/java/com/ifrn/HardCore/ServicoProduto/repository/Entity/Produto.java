@@ -13,20 +13,22 @@ import lombok.NonNull;
 import java.util.List;
 
 @Entity
-@Table(name = "produto")
+@Table(name = "TB_produto")
 @Data
 @NoArgsConstructor
 public class Produto {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @NotBlank
     private String nome;
 
+    @NotBlank
     private String marca;
 
+    @NotBlank
     private String categoria;
 
     @NotNull
@@ -42,15 +44,12 @@ public class Produto {
     @OneToMany(mappedBy = "produto")
     private List<AvaliacaoCliente> avaliacoes;
 
-    public Produto(Long id, String nome, String marca, String categoria, @NotNull Double preco, Estoque estoque,
-                   Prateleira prateleira, List<AvaliacaoCliente> avaliacoes) {
+    public Produto(Long id, String nome, String marca, String categoria, @NotNull Double preco, Prateleira prateleira) {
         this.id = id;
         this.nome = nome;
         this.marca = marca;
         this.categoria = categoria;
         this.preco = preco;
-        this.estoque = estoque;
         this.prateleira = prateleira;
-        this.avaliacoes = avaliacoes;
     }
 }

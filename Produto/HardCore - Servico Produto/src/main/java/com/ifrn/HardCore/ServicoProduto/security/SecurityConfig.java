@@ -25,7 +25,7 @@ public class SecurityConfig {
                     .sessionManagement(session ->
                             session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .authorizeHttpRequests(auth -> auth
-                            .anyRequest().hasAnyRole("GERENTE", "ADMIN")
+                            .anyRequest().hasAnyRole("GERENTE")
                     )
                     .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                     .build();

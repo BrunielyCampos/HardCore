@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ProdutoRepository extends JpaRepository<Long, Produto> {
+public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
-    public Optional<Produto> findByCategoriaAllIgnoreCase(String categoria);
+    List<Produto> findByCategoriaAllIgnoreCase(String categoria);
 
-    public Optional<Produto> findByMarcaAllIgnoreCase(String marca);
+    List<Produto> findByMarcaAllIgnoreCase(String marca);
 
     Optional <Produto> findById(Long produtoId);
 }

@@ -1,5 +1,6 @@
 package com.ifrn.HardCore.ServicoProduto.DTO;
 
+import com.ifrn.HardCore.ServicoProduto.repository.Entity.Prateleira;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -19,10 +20,13 @@ public class ProdutoRequestDTO {
     @NotNull
     private Double preco;
 
-    public ProdutoRequestDTO(String nome, String marca, String categoria, @NotNull Double preco){
+    private Long idPrateleira;
+
+    public ProdutoRequestDTO(String nome, String marca, String categoria, @NotNull Double preco, Long idPrateleira){
         this.nome = nome;
         this.marca = marca;
         this.categoria = categoria;
         this.preco = preco;
+        this.idPrateleira = idPrateleira;
     }
 }
