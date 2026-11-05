@@ -80,14 +80,14 @@ public class PrateleiraService {
     }
 
     public void deleteProdutoPrateleira(Long produto_id){
-       Produto produto =
-               produtoRepository.findById(produto_id).orElseThrow(() -> new PrateleiraNaoEncontradaException(produto_id));
-        if (p != 0){
+       Prateleira produto =
+               repository.findByProdutosId(produto_id).orElseThrow(() -> new PrateleiraNaoEncontradaException(produto_id));
+        if (produto.getQuantidade_produto() != 0 || produto.getQuantidade_produto() > 0){
             throw new IllegalArgumentException("Esse produto não pode ser deletado, ainda há unidade dele para a " +
                     "venda!");
         }
 
-
+        repository.delete(produto);
     }
 
     public Prateleira ToEntity(PrateleiraRequestDTO dto){

@@ -21,6 +21,7 @@ public class AvaliacaoCliente {
     @NotNull
     private boolean avaliacao;
 
+    @Column(nullable = true)
     private String campoComentario;
 
     @ManyToOne
