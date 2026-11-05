@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -22,7 +23,7 @@ public class Prateleira {
     private int quantidade_produto;
 
     @OneToMany(mappedBy = "prateleira")
-    private List<Produto> produtos;
+    private List<Produto> produtos = new ArrayList<>();
 
     public Prateleira(Long id, @NonNull int quantidade_produto) {
         this.id = id;

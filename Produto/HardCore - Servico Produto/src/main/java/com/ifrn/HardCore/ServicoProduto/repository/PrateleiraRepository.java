@@ -9,5 +9,6 @@ import java.util.Optional;
 public interface PrateleiraRepository extends JpaRepository<Prateleira, Long> {
 
     Optional<Prateleira> findByProdutosId(Long id);
+    Optional<Prateleira> findFirstByOrderByIdAsc();
 
 }
