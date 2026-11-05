@@ -47,6 +47,42 @@ public class EstoqueService {
         return toResponseDTO(salvo);
     }
 
+    public List<EstoqueResponseDTO> listarPorMaiorQtdDispinivel(int qtd){
+         if(qtd < 0) {
+            throw new IllegalArgumentException("Quantidade passada Invalida!");
+        }
+
+         return repository.findByProdutosQuantidadeProdutoGreaterThanEqual(qtd).stream().map(this::toResponseDTO).toList();
+    }
+    public List<EstoqueResponseDTO> listarPorMenorQtdDispinivel(int qtd){
+         if(qtd < 0) {
+            throw new IllegalArgumentException("Quantidade passada Invalida!");
+        }
+
+        return repository.findByProdutosQuantidadeProdutoLessthanEqual(qtd).stream().map(this::toResponseDTO).toList();
+    }
+
+    public void deletarProduto(Long produto_id) {
+
+        Produto produto = produtoRepository.findById(produto_id)
+                .orElseThrow(() -> new ProdutoNaoEncontradoException(produto_id));
+
+        Estoque estoque = repository.findByProdutoId(produto_id)
+                .orElseThrow(() -> new EstoqueNaoEncontradoException(produto_id));
+
+        if (estoque.getQuantidadeProduto() != 0) {
+            throw new IllegalArgumentException(
+                    "O produto ainda possui unidades no estoque!");
+        }
+
+        if (produto.getPrateleira() != null) {
+            throw new IllegalArgumentException(
+                    "O produto ainda está disponível para venda!");
+        }
+
+        repository.delete(estoque);
+        produtoRepository.delete(produto);
+    }
 
     public Estoque toEntity(@Valid EstoqueRequestDTO dto){
         Produto produto = produtoRepository.findById(dto.getProduto_id()).orElseThrow(() -> new ProdutoNaoEncontradoException(dto.getProduto_id()));

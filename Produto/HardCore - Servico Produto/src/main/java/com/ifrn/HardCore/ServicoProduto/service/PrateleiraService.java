@@ -1,21 +1,30 @@
 package com.ifrn.HardCore.ServicoProduto.service;
 
+import com.ifrn.HardCore.ServicoProduto.DTO.EstoqueResponseDTO;
 import com.ifrn.HardCore.ServicoProduto.DTO.PrateleiraRequestDTO;
 import com.ifrn.HardCore.ServicoProduto.DTO.PrateleiraResponseDTO;
 import com.ifrn.HardCore.ServicoProduto.exception.EstoqueNaoEncontradoException;
+import com.ifrn.HardCore.ServicoProduto.exception.PrateleiraNaoEncontradaException;
+import com.ifrn.HardCore.ServicoProduto.exception.ProdutoNaoEncontradoException;
 import com.ifrn.HardCore.ServicoProduto.repository.Entity.Estoque;
 import com.ifrn.HardCore.ServicoProduto.repository.Entity.Prateleira;
 import com.ifrn.HardCore.ServicoProduto.repository.Entity.Produto;
 import com.ifrn.HardCore.ServicoProduto.repository.EstoqueRepository;
 import com.ifrn.HardCore.ServicoProduto.repository.PrateleiraRepository;
+import com.ifrn.HardCore.ServicoProduto.repository.ProdutoRepository;
+import org.hibernate.sql.Delete;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class PrateleiraService {
     private PrateleiraRepository repository;
     private EstoqueRepository estoqueRepository;
+    private ProdutoRepository produtoRepository;
 
     public PrateleiraService(PrateleiraRepository repository) {
         this.repository = repository;
@@ -33,19 +42,52 @@ public class PrateleiraService {
         return prateleiras.stream().map(this::ToResponseDTo).toList();
     }
 
-    //To do: Listar prateleiraById
+    public PrateleiraResponseDTO listarProdutosPrateleiraById(Long id){
+        Prateleira produto =
+                repository.findByProdutosId(id).orElseThrow(() -> new PrateleiraNaoEncontradaException(id));
 
-    /*
-        public PrateleiraResponseDTO TransferirParaPrateleira(Long idProduto, Long idPrateleira,int qtdTransferencia){
-            //To do: Antes preciso arrumar o relacionamento com produto.
+        return ToResponseDTo(produto);
+    }
+
+    @Transactional
+    public PrateleiraResponseDTO transferirParaPrateleira(Long produtoId, int quantidade) {
+
+        Estoque estoque =
+                estoqueRepository.findByProdutoId(produtoId).orElseThrow(() -> new EstoqueNaoEncontradoException(produtoId));
+
+        if (quantidade <= 0 || estoque.getQuantidadeProduto() < quantidade){
+            throw new IllegalArgumentException("Quantidade passada invalida ou estoque do produto insuficiente.");
         }
-    */
 
-    public Long BuscarIdProdutoEstoque(Long id){
-       Estoque estoqueid =
-               estoqueRepository.findByProdutoId(id).orElseThrow(() -> new EstoqueNaoEncontradoException(id));
+        Prateleira pratAux = repository.findFirstByOrderByIdAsc().orElseThrow(PrateleiraNaoEncontradaException::new);
 
-       return estoqueid.getId();
+        Produto produto = estoque.getProduto();
+
+        if (produto.getPrateleira() == null){
+            produto.setPrateleira(pratAux);
+            pratAux.getProdutos().add(produto);
+        }
+
+        estoque.setQuantidadeProduto(
+                    estoque.getQuantidadeProduto() - quantidade);
+
+           pratAux.setQuantidade_produto(pratAux.getQuantidade_produto() + quantidade);
+
+            estoqueRepository.save(estoque);
+            produtoRepository.save(produto);
+
+        return ToResponseDTo(pratAux);
+    }
+
+    public void deleteProdutoPrateleira(Long produto_id){
+       Prateleira produto =
+               repository.findByProdutosId(produto_id).orElseThrow(() -> new PrateleiraNaoEncontradaException(produto_id));
+        if (produto.getQuantidade_produto() != 0 || produto.getQuantidade_produto() > 0){
+            throw new IllegalArgumentException("Esse produto não pode ser deletado, ainda há unidade dele para a " +
+                    "venda!");
+        }
+
+        repository.delete(produto);
     }
 
     public Prateleira ToEntity(PrateleiraRequestDTO dto){

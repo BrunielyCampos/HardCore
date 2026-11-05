@@ -11,13 +11,12 @@ public class PrateleiraResponseDTO {
 
     private Long id;
 
-    @NonNull
     private int quantidade_produto;
 
 
     private List<Long> produtoIds;
 
-    public PrateleiraResponseDTO(Long id, @NonNull int quantidade_produto, List<Long> produtoIds) {
+    public PrateleiraResponseDTO(Long id, int quantidade_produto, List<Long> produtoIds) {
         this.id = id;
         this.quantidade_produto = quantidade_produto;
         this.produtoIds = produtoIds;

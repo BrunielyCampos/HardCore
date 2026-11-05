@@ -11,11 +11,10 @@ import java.util.List;
 public class PrateleiraRequestDTO {
 
 
-    @NotNull
     private int quantidade_produto;
 
 
-    public PrateleiraRequestDTO( @NotNull int quantidade_produto) {
+    public PrateleiraRequestDTO(int quantidade_produto) {
         this.quantidade_produto = quantidade_produto;
     }
 }
