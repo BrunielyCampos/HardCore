@@ -14,11 +14,11 @@ public class PrateleiraResponseDTO {
     private int quantidade_produto;
 
 
-    private List<Long> produtoIds;
+    private Long produtoId;
 
-    public PrateleiraResponseDTO(Long id, int quantidade_produto, List<Long> produtoIds) {
+    public PrateleiraResponseDTO(Long id, int quantidade_produto, Long produtoId) {
         this.id = id;
         this.quantidade_produto = quantidade_produto;
-        this.produtoIds = produtoIds;
+        this.produtoId = produtoId;
     }
 }

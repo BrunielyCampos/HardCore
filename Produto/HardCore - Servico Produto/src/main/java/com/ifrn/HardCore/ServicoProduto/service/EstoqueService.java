@@ -2,12 +2,9 @@ package com.ifrn.HardCore.ServicoProduto.service;
 
 import com.ifrn.HardCore.ServicoProduto.DTO.EstoqueRequestDTO;
 import com.ifrn.HardCore.ServicoProduto.DTO.EstoqueResponseDTO;
-import com.ifrn.HardCore.ServicoProduto.DTO.PrateleiraRequestDTO;
-import com.ifrn.HardCore.ServicoProduto.DTO.PrateleiraResponseDTO;
 import com.ifrn.HardCore.ServicoProduto.exception.EstoqueNaoEncontradoException;
 import com.ifrn.HardCore.ServicoProduto.exception.ProdutoNaoEncontradoException;
 import com.ifrn.HardCore.ServicoProduto.repository.Entity.Estoque;
-import com.ifrn.HardCore.ServicoProduto.repository.Entity.Prateleira;
 import com.ifrn.HardCore.ServicoProduto.repository.Entity.Produto;
 import com.ifrn.HardCore.ServicoProduto.repository.EstoqueRepository;
 import com.ifrn.HardCore.ServicoProduto.repository.ProdutoRepository;
@@ -21,8 +18,9 @@ public class EstoqueService {
     private EstoqueRepository repository;
     private ProdutoRepository produtoRepository;
 
-    public EstoqueService(EstoqueRepository estoque) {
-        this.repository = estoque;
+    public EstoqueService(EstoqueRepository repository, ProdutoRepository produtoRepository) {
+        this.repository = repository;
+        this.produtoRepository = produtoRepository;
     }
 
     public List<EstoqueResponseDTO> listarEstoque(){
@@ -31,7 +29,7 @@ public class EstoqueService {
         return estoques.stream().map(this::toResponseDTO).toList();
     }
 
-    public EstoqueResponseDTO atualizarQtdProduto(EstoqueRequestDTO dto, int quantidadeProduto, Long id_Produto){
+    public EstoqueResponseDTO atualizarQtdProduto(int quantidadeProduto, Long id_Produto){
         Estoque estoque =
                 repository.findByProdutoId(id_Produto).orElseThrow(() -> new EstoqueNaoEncontradoException(id_Produto));
 
@@ -60,28 +58,6 @@ public class EstoqueService {
         }
 
         return repository.findByProdutosQuantidadeProdutoLessthanEqual(qtd).stream().map(this::toResponseDTO).toList();
-    }
-
-    public void deletarProduto(Long produto_id) {
-
-        Produto produto = produtoRepository.findById(produto_id)
-                .orElseThrow(() -> new ProdutoNaoEncontradoException(produto_id));
-
-        Estoque estoque = repository.findByProdutoId(produto_id)
-                .orElseThrow(() -> new EstoqueNaoEncontradoException(produto_id));
-
-        if (estoque.getQuantidadeProduto() != 0) {
-            throw new IllegalArgumentException(
-                    "O produto ainda possui unidades no estoque!");
-        }
-
-        if (produto.getPrateleira() != null) {
-            throw new IllegalArgumentException(
-                    "O produto ainda está disponível para venda!");
-        }
-
-        repository.delete(estoque);
-        produtoRepository.delete(produto);
     }
 
     public Estoque toEntity(@Valid EstoqueRequestDTO dto){

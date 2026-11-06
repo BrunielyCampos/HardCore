@@ -37,7 +37,7 @@ public class Produto {
     @OneToOne(mappedBy = "produto")
     private Estoque estoque;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "prateleira_id")
     private Prateleira prateleira;
 

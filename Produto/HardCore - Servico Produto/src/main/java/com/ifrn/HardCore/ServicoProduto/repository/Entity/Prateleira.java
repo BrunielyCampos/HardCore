@@ -23,11 +23,12 @@ public class Prateleira {
     @Column(nullable = false)
     private int quantidade_produto;
 
-    @OneToMany(mappedBy = "prateleira")
-    private List<Produto> produtos = new ArrayList<>();
+    @OneToOne(mappedBy = "prateleira")
+    private Produto produto;
 
-    public Prateleira(Long id, @NotNull int quantidade_produto) {
+    public Prateleira(Long id, @NotNull int quantidade_produto, Produto produto) {
         this.id = id;
         this.quantidade_produto = quantidade_produto;
+        this.produto = produto;
     }
 }
