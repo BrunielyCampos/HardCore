@@ -61,7 +61,7 @@ public class EstoqueService {
             throw new IllegalArgumentException("Quantidade passada Invalida!");
         }
 
-         return repository.findByProdutosQuantidadeProdutoGreaterThanEqual(qtd).stream().map(this::toResponseDTO).toList();
+         return repository.findByQuantidadeProdutoGreaterThanEqual(qtd).stream().map(this::toResponseDTO).toList();
     }
 
 
@@ -70,7 +70,7 @@ public class EstoqueService {
             throw new IllegalArgumentException("Quantidade passada Invalida!");
         }
 
-        return repository.findByProdutosQuantidadeProdutoLessthanEqual(qtd).stream().map(this::toResponseDTO).toList();
+        return repository.findByQuantidadeProdutoLessThanEqual(qtd).stream().map(this::toResponseDTO).toList();
     }
 
     public Estoque toEntity(@Valid EstoqueRequestDTO dto){
