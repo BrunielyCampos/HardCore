@@ -26,14 +26,14 @@ public class PrateleiraService {
     private EstoqueRepository estoqueRepository;
     private ProdutoRepository produtoRepository;
 
-    public PrateleiraService(PrateleiraRepository repository) {
+    public PrateleiraService(PrateleiraRepository repository, EstoqueRepository estoqueRepository, ProdutoRepository produtoRepository) {
         this.repository = repository;
+        this.estoqueRepository = estoqueRepository;
+        this.produtoRepository = produtoRepository;
     }
 
     public PrateleiraResponseDTO criarPrateleira(PrateleiraRequestDTO dto){
-        Prateleira salva = repository.save(ToEntity(dto));
-
-        return ToResponseDTo(salva);
+        return transferirParaPrateleira(dto.getProdutoId(), dto.getQuantidade_produto());
     }
 
     public List<PrateleiraResponseDTO> listarPrateleira(){
@@ -44,7 +44,7 @@ public class PrateleiraService {
 
     public PrateleiraResponseDTO listarProdutosPrateleiraById(Long id){
         Prateleira produto =
-                repository.findByProdutosId(id).orElseThrow(() -> new PrateleiraNaoEncontradaException(id));
+                repository.findByProdutoId(id).orElseThrow(() -> new PrateleiraNaoEncontradaException(id));
 
         return ToResponseDTo(produto);
     }
@@ -52,60 +52,66 @@ public class PrateleiraService {
     @Transactional
     public PrateleiraResponseDTO transferirParaPrateleira(Long produtoId, int quantidade) {
 
-        Estoque estoque =
-                estoqueRepository.findByProdutoId(produtoId).orElseThrow(() -> new EstoqueNaoEncontradoException(produtoId));
+        Estoque estoque = estoqueRepository.findByProdutoId(produtoId)
+                .orElseThrow(() -> new EstoqueNaoEncontradoException(produtoId));
 
-        if (quantidade <= 0 || estoque.getQuantidadeProduto() < quantidade){
-            throw new IllegalArgumentException("Quantidade passada invalida ou estoque do produto insuficiente.");
+        if (quantidade <= 0 || estoque.getQuantidadeProduto() < quantidade) {
+            throw new IllegalArgumentException(
+                    "Quantidade inválida ou estoque insuficiente."
+            );
         }
-
-        Prateleira pratAux = repository.findFirstByOrderByIdAsc().orElseThrow(PrateleiraNaoEncontradaException::new);
 
         Produto produto = estoque.getProduto();
 
-        if (produto.getPrateleira() == null){
-            produto.setPrateleira(pratAux);
-            pratAux.getProdutos().add(produto);
+        Prateleira prateleira = repository.findByProdutoId(produtoId)
+                .orElse(null);
+
+        if (prateleira == null) {
+            prateleira = new Prateleira(null, quantidade, produto);
+        } else {
+            prateleira.setQuantidade_produto(
+                    prateleira.getQuantidade_produto() + quantidade
+            );
         }
 
+        produto.setPrateleira(prateleira);
+
         estoque.setQuantidadeProduto(
-                    estoque.getQuantidadeProduto() - quantidade);
+                estoque.getQuantidadeProduto() - quantidade
+        );
 
-           pratAux.setQuantidade_produto(pratAux.getQuantidade_produto() + quantidade);
+        repository.save(prateleira);
+        estoqueRepository.save(estoque);
 
-            estoqueRepository.save(estoque);
-            produtoRepository.save(produto);
-
-        return ToResponseDTo(pratAux);
+        return ToResponseDTo(prateleira);
     }
 
     public void deleteProdutoPrateleira(Long produto_id){
-       Prateleira produto =
-               repository.findByProdutosId(produto_id).orElseThrow(() -> new PrateleiraNaoEncontradaException(produto_id));
-        if (produto.getQuantidade_produto() != 0 || produto.getQuantidade_produto() > 0){
-            throw new IllegalArgumentException("Esse produto não pode ser deletado, ainda há unidade dele para a " +
-                    "venda!");
+        Prateleira prateleira = repository.findByProdutoId(produto_id)
+                .orElseThrow(() -> new PrateleiraNaoEncontradaException(produto_id));
+
+        if (prateleira.getQuantidade_produto() > 0) {
+            throw new IllegalArgumentException(
+                    "Esse produto não pode ser deletado, ainda há unidades dele disponíveis para venda!"
+            );
         }
 
-        repository.delete(produto);
+        repository.delete(prateleira);
     }
 
-    public Prateleira ToEntity(PrateleiraRequestDTO dto){
-        return new Prateleira(null,dto.getQuantidade_produto());
+    public Prateleira ToEntity(PrateleiraRequestDTO dto) {
+        Produto produto = produtoRepository.findById(dto.getProdutoId())
+                .orElseThrow(() -> new ProdutoNaoEncontradoException(dto.getProdutoId()));
+
+        return new Prateleira(null, dto.getQuantidade_produto(), produto);
     }
 
-    public PrateleiraResponseDTO ToResponseDTo(Prateleira prat){
+    public PrateleiraResponseDTO ToResponseDTo(Prateleira prat) {
         PrateleiraResponseDTO dto = new PrateleiraResponseDTO();
 
         dto.setId(prat.getId());
         dto.setQuantidade_produto(prat.getQuantidade_produto());
-
-        if (prat.getProdutos() != null) {
-            List<Long> ids = prat.getProdutos().stream()
-                    .map(Produto::getId)
-                    .collect(Collectors.toList());
-            dto.setProdutoIds(ids);
-        }
+        dto.setProdutoId(prat.getProduto().getId());
 
         return dto;
     }

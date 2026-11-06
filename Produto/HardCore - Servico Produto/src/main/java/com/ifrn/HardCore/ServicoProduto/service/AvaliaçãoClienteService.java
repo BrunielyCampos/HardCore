@@ -35,7 +35,7 @@ public class AvaliaçãoClienteService {
         return avaliacaoCliente.stream().map(this::toResponseDTO).toList();
     }
 
-    public AvaliacaoClienteResponseDTO buscarAvaliacaoPorid(Long id){
+    public AvaliacaoClienteResponseDTO buscarAvaliacaoPorId(Long id){
         AvaliacaoCliente avaliacaoCliente =
                 repository.findById(id).orElseThrow(() -> new AvaliacaoNaoEncontradaException(id));
 
