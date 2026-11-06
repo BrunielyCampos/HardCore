@@ -23,7 +23,8 @@ public class Prateleira {
     @Column(nullable = false)
     private int quantidade_produto;
 
-    @OneToOne(mappedBy = "prateleira")
+    @OneToOne
+    @JoinColumn(name = "produto_id", unique = true)
     private Produto produto;
 
     public Prateleira(Long id, @NotNull int quantidade_produto, Produto produto) {

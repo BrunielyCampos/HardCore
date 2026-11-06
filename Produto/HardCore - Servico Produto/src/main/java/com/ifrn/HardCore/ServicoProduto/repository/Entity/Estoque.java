@@ -23,7 +23,7 @@ public class Estoque {
     private int quantidadeProduto;
 
     @OneToOne
-    @JoinColumn(name = "produto_id")
+    @JoinColumn(name = "produto_id", unique = true)
     private Produto produto;
 
     public Estoque(Long id, int quantidadeProduto, Produto produto) {

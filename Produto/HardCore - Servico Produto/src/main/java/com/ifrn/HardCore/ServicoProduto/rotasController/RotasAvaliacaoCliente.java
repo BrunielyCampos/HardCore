@@ -1,6 +1,6 @@
 package com.ifrn.HardCore.ServicoProduto.rotasController;
 
-public interface AvaliacaoCliente {
+public interface RotasAvaliacaoCliente {
 
     String AVALIACAO_BASE = "/avaliacoes";
 

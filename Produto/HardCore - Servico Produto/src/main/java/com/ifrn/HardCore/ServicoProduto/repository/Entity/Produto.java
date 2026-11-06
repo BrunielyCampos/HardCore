@@ -37,8 +37,7 @@ public class Produto {
     @OneToOne(mappedBy = "produto")
     private Estoque estoque;
 
-    @OneToOne
-    @JoinColumn(name = "prateleira_id")
+    @OneToOne(mappedBy = "produto")
     private Prateleira prateleira;
 
     @OneToMany(mappedBy = "produto")

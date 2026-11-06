@@ -31,7 +31,13 @@ public class ProdutoService {
         return repository.findAll().stream().map(this::ToResponseDTO).toList();
     }
 
-    public List<ProdutoResponseDTO> ListarPorId(List<Long> ids){
+    public ProdutoResponseDTO buscarPorId(Long id){
+        Produto produto = repository.findById(id).orElseThrow(() -> new ProdutoNaoEncontradoException(id));
+
+        return ToResponseDTO(produto);
+    }
+
+    public List<ProdutoResponseDTO> ListarPorIds(List<Long> ids){
         List<Produto> produtos = repository.findAllById(ids);
 
         return produtos.stream().map(this::ToResponseDTO).toList();
@@ -50,11 +56,6 @@ public class ProdutoService {
         return produtosMarca.stream().map(this::ToResponseDTO).toList();
     }
 
-    public ProdutoResponseDTO buscarPorId(Long id){
-        Produto produto = repository.findById(id).orElseThrow(() -> new ProdutoNaoEncontradoException(id));
-        
-        return ToResponseDTO(produto);
-    }
 
     public ProdutoResponseDTO cadastrarProduto(ProdutoRequestDTO dto){
         Produto salvo = repository.save(toEntity(dto));

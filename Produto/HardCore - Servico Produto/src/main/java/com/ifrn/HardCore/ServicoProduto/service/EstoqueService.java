@@ -23,10 +23,26 @@ public class EstoqueService {
         this.produtoRepository = produtoRepository;
     }
 
+    public EstoqueResponseDTO cadastrarEstoque(EstoqueRequestDTO dto){
+        Estoque salvo = repository.save(toEntity(dto));
+
+        if (repository.findByProdutoId(dto.getProduto_id()).isPresent()) {
+            throw new IllegalArgumentException("Esse produto já possui um registro de estoque.");
+        }
+
+        return toResponseDTO(salvo);
+    }
+
     public List<EstoqueResponseDTO> listarEstoque(){
         List<Estoque> estoques = repository.findAll();
 
         return estoques.stream().map(this::toResponseDTO).toList();
+    }
+
+    public EstoqueResponseDTO buscarPorId(Long id){
+        Estoque estoque = repository.findById(id).orElseThrow(() -> new EstoqueNaoEncontradoException(id));
+
+        return toResponseDTO(estoque);
     }
 
     public EstoqueResponseDTO atualizarQtdProduto(int quantidadeProduto, Long id_Produto){
@@ -39,11 +55,6 @@ public class EstoqueService {
           return toResponseDTO(salvo);
     }
 
-    public EstoqueResponseDTO cadastrarEstoque(EstoqueRequestDTO dto){
-        Estoque salvo = repository.save(toEntity(dto));
-
-        return toResponseDTO(salvo);
-    }
 
     public List<EstoqueResponseDTO> listarPorMaiorQtdDispinivel(int qtd){
          if(qtd < 0) {
@@ -52,6 +63,8 @@ public class EstoqueService {
 
          return repository.findByProdutosQuantidadeProdutoGreaterThanEqual(qtd).stream().map(this::toResponseDTO).toList();
     }
+
+
     public List<EstoqueResponseDTO> listarPorMenorQtdDispinivel(int qtd){
          if(qtd < 0) {
             throw new IllegalArgumentException("Quantidade passada Invalida!");
