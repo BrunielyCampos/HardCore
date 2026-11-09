@@ -10,7 +10,8 @@ import promo1 from '../assets/HomeAsset/1.png';
 import promo2 from '../assets/HomeAsset/2.png'; 
 import promo3 from '../assets/HomeAsset/3.png'; 
 import promo4 from '../assets/HomeAsset/4.png'; 
-import bannerHorizontal from '../assets/HomeAsset/RodapeAnuncio.png'; 
+import bannerHorizontal from '../assets/HomeAsset/RodapeAnuncio.png';
+import pagamentoImg from '../assets/HomeAsset/Pagamento.png'; 
 
 // Importação das imagens do Carrossel
 import carrossel1 from '../assets/HomeAsset/Carrossel1.jpg';
@@ -155,11 +156,11 @@ export default function Home() {
       >
         <div className="mx-auto relative h-[424px] w-full max-w-[1509px]">
           
-          <div className="absolute left-[70px] top-[52px]">
+         <div className="absolute left-[70px] top-[52px]">
             <h3 className="mb-[15px] font-['Inter'] text-[19.41px] font-semibold text-white">
               Formas de Pagamento
             </h3>
-            <img src="https://placehold.co/668x94" alt="Bandeiras de Pagamento" className="h-[94px] w-[668px] object-contain" />
+            <img src={pagamentoImg} alt="Bandeiras de Pagamento" className="h-[94px] w-[668px] object-contain" />
           </div>
 
           <div className="absolute left-[36px] top-[211px] h-[2px] w-[1419px] bg-[#0A0A0A]" />
