@@ -36,13 +36,13 @@ export default function HeaderAnimado() {
         <img
           src={manchaPreta}
           alt=""
-          className="absolute w-[250px] h-[222px] left-[120px] top-[70px] -translate-x-1/2 -translate-y-1/2 object-contain"
+          className="absolute w-[250px] h-[222px] left-[210px] top-[70px] -translate-x-1/2 -translate-y-1/2 object-contain"
         />
           
         <img 
           src={logoHardcore} 
           alt="Logo Hardcore" 
-          className="absolute w-[190px] h-[132px] left-[10px] top-[5px] -rotate-1 origin-top-left"
+          className="absolute w-[190px] h-[132px] left-[100px] top-[5px] -rotate-1 origin-top-left"
         />
       </div>
 
