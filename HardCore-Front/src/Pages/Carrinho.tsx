@@ -4,6 +4,11 @@ import HeaderSimples from '../Componentes/HeaderSimples/HeaderSimples';
 import Footer from '../Componentes/Footer/FooterPagamento';
 import { useCarrinho } from '../Context/CarrinhoContext';
 
+// Importação dos ícones do stepper de checkout
+import iconIdentificacao from '../assets/InformacoesAsset/Identificacao.svg';
+import iconPagamento from '../assets/InformacoesAsset/Pagamento.svg';
+import iconConfirmacao from '../assets/InformacoesAsset/Confirmacao.svg';
+
 export default function Carrinho() {
   const { itens, valorTotal, alterarQuantidade, removerDoCarrinho, limparCarrinho } = useCarrinho();
 
@@ -16,7 +21,7 @@ export default function Carrinho() {
 
       <main className="mx-auto flex w-full max-w-[1509px] flex-col relative pb-20 pt-[140px]">
         
-        {/* Barra de Progresso do Checkout */}
+        {/* Barra de Progresso do Checkout (Stepper com Efeito de Brilho/Pulsação no Ativo) */}
         <section 
           className="w-full h-[245px] flex justify-center items-center relative z-10"
           style={{ background: 'linear-gradient(135deg, #1C1C1C 0%, #3F0909 30%, #121212 100%)' }}
@@ -26,29 +31,44 @@ export default function Carrinho() {
             <div className="absolute top-[35px] left-[390px] w-[280px] h-[3px] bg-black z-0" />
             <div className="absolute top-[35px] left-[710px] w-[280px] h-[3px] bg-black z-0" />
 
-            {/* Passo 1: Carrinho */}
+            {/* Passo 1: Carrinho (Ativo com efeito de brilho/pulsação) */}
             <div className="flex flex-col items-center gap-[15px] z-10 relative">
-              <div className="flex h-[71px] w-[71px] items-center justify-center rounded-full bg-[#FF0000] border-[4px] border-black">
+              <div className="flex h-[71px] w-[71px] items-center justify-center rounded-full bg-[#FF0000] border-[4px] border-black shadow-[0_0_20px_rgba(255,0,0,0.8)] animate-pulse">
                 <svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M7 18C5.9 18 5.01 18.9 5.01 20C5.01 21.1 5.9 22 7 22C8.1 22 9 21.1 9 20C9 18.9 8.1 18 7 18ZM1 2V4H3L6.6 11.59L5.24 14.04C5.09 14.32 5 14.65 5 15C5 16.1 5.9 17 7 17H19V15H7.42C7.28 15 7.17 14.89 7.17 14.75L7.2 14.63L8.1 13H15.55C16.3 13 16.96 12.59 17.3 11.97L20.88 5.48C20.96 5.34 21 5.17 21 5C21 4.45 20.55 4 20 4H5.21L4.27 2H1ZM17 18C15.9 18 15.01 18.9 15.01 20C15.01 21.1 15.9 22 17 22C18.1 22 19 21.1 19 20C19 18.9 18.1 18 17 18Z" fill="black"/>
                 </svg>
               </div>
-              <span className="font-['Iosevka_Charon'] text-[25px] font-normal text-white">Carrinho</span>
+              <span className="font-['Iosevka_Charon'] text-[25px] font-bold text-[#FF5555]">Carrinho</span>
             </div>
 
-            {/* Passos Inativos */}
-            {["Identificação", "Pagamento", "Confirmação"].map((passo, i) => (
-              <div key={i} className="flex flex-col items-center gap-[15px] z-10 relative">
-                <div className="flex h-[71px] w-[71px] items-center justify-center rounded-full bg-[#D9D9D9] border-[4px] border-black">
-                  <div className="w-[15px] h-[15px] bg-black rounded-full" />
-                </div>
-                <span className="font-['Iosevka_Charon'] text-[25px] font-normal text-white">{passo}</span>
+            {/* Passo 2: Identificação (Inativo) */}
+            <div className="flex flex-col items-center gap-[15px] z-10 relative">
+              <div className="flex h-[71px] w-[71px] items-center justify-center rounded-full bg-[#D9D9D9] border-[4px] border-black opacity-80">
+                <img src={iconIdentificacao} alt="Identificação" className="h-[34px] w-[34px] object-contain" />
               </div>
-            ))}
+              <span className="font-['Iosevka_Charon'] text-[25px] font-normal text-white/70">Identificação</span>
+            </div>
+
+            {/* Passo 3: Pagamento (Inativo) */}
+            <div className="flex flex-col items-center gap-[15px] z-10 relative">
+              <div className="flex h-[71px] w-[71px] items-center justify-center rounded-full bg-[#D9D9D9] border-[4px] border-black opacity-80">
+                <img src={iconPagamento} alt="Pagamento" className="h-[34px] w-[34px] object-contain" />
+              </div>
+              <span className="font-['Iosevka_Charon'] text-[25px] font-normal text-white/70">Pagamento</span>
+            </div>
+
+            {/* Passo 4: Confirmação (Inativo) */}
+            <div className="flex flex-col items-center gap-[15px] z-10 relative">
+              <div className="flex h-[71px] w-[71px] items-center justify-center rounded-full bg-[#D9D9D9] border-[4px] border-black opacity-80">
+                <img src={iconConfirmacao} alt="Confirmação" className="h-[34px] w-[34px] object-contain" />
+              </div>
+              <span className="font-['Iosevka_Charon'] text-[25px] font-normal text-white/70">Confirmação</span>
+            </div>
+
           </div>
         </section>
 
-        {/* Área Central */}
+        {/* Área Central: Lista e Resumo */}
         <section className="flex w-full justify-center gap-[30px] px-[70px] mt-[60px]">
           
           {/* Lado Esquerdo: Lista de Produtos */}
@@ -80,7 +100,7 @@ export default function Carrinho() {
                       <div className="flex h-[110px] w-[110px] items-center justify-center bg-white rounded-[5px] p-2 relative">
                         <button 
                           onClick={() => removerDoCarrinho(produto.id)}
-                          className="absolute -top-2 -left-2 bg-[#FF0000] rounded-full p-1 hover:scale-110 transition-transform"
+                          className="absolute -top-2 -left-2 bg-[#FF0000] rounded-full p-1 hover:scale-110 transition-transform cursor-pointer"
                           title="Remover Item"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -97,7 +117,7 @@ export default function Carrinho() {
                     <div className="flex items-center h-[35px] bg-[#D9D9D9] rounded-[3px] overflow-hidden">
                       <button 
                         onClick={() => alterarQuantidade(produto.id, -1)}
-                        className="flex items-center justify-center w-[35px] h-full hover:bg-black/10 transition-colors"
+                        className="flex items-center justify-center w-[35px] h-full hover:bg-black/10 transition-colors cursor-pointer"
                       >
                         <svg width="12" height="13" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg">
                            <path d="M2.5 6.5H9.5" stroke="#FF0000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -108,7 +128,7 @@ export default function Carrinho() {
                       </div>
                       <button 
                         onClick={() => alterarQuantidade(produto.id, 1)}
-                        className="flex items-center justify-center w-[35px] h-full hover:bg-black/10 transition-colors"
+                        className="flex items-center justify-center w-[35px] h-full hover:bg-black/10 transition-colors cursor-pointer"
                       >
                         <svg width="12" height="13" viewBox="0 0 12 13" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M6 3V10M2.5 6.5H9.5" stroke="#FF0000" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -163,12 +183,12 @@ export default function Carrinho() {
             <div className="flex flex-col gap-[15px]">
               <button 
                 disabled={itens.length === 0}
-                className="w-full h-[55px] bg-[#FF0000] text-white font-['Inter'] font-bold text-[18px] rounded-[5px] hover:bg-[#cc0000] transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-[55px] bg-[#FF0000] text-white font-['Inter'] font-bold text-[18px] rounded-[5px] hover:bg-[#cc0000] transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 CONTINUAR
               </button>
               <Link to="/">
-                <button className="w-full h-[55px] bg-[#3D3D3D] border-[2px] border-[#5C5C5C] text-white font-['Inter'] font-bold text-[18px] rounded-[5px] hover:bg-[#2D2D2D] transition-colors shadow-md">
+                <button className="w-full h-[55px] bg-[#3D3D3D] border-[2px] border-[#5C5C5C] text-white font-['Inter'] font-bold text-[18px] rounded-[5px] hover:bg-[#2D2D2D] transition-colors shadow-md cursor-pointer">
                   VOLTAR
                 </button>
               </Link>
