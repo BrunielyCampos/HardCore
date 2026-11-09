@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import HeaderAnimado from '../Componentes/HeaderAnimado/HeaderAnimado';
 import CaixaProdutos from '../Componentes/CaixaProdutos/CaixaProdutos';
-import Footer from '../Componentes/Footer/FooterPagamento'; // Importe o novo componente
+import Footer from '../Componentes/Footer/FooterPagamento'; // Ou o caminho do seu Footer
 
 import processadorImg from '../Componentes/CaixaProdutos/CaixaProdutosAssets/FotoProduto.png';
-
 import wolverineImg from '../assets/HomeAsset/image 4.png';
 import wolverineSplash from '../assets/HomeAsset/image 3.png';
 import promo1 from '../assets/HomeAsset/1.png'; 
@@ -36,11 +35,12 @@ export default function Home() {
     >
       <HeaderAnimado />
 
-      <main className="mx-auto flex w-full max-w-[1509px] flex-col relative pb-20">
+      {/* pt-[180px] adicionado para compensar o header fixo de 140px + margem */}
+      <main className="mx-auto flex w-full max-w-[1509px] flex-col relative pb-20 pt-[180px]">
         
         <div className="w-full h-[1px] bg-black opacity-20 -mt-[1px]" />
 
-        <section className="mt-20 w-full flex justify-center">
+        <section className="mt-4 w-full flex justify-center">
           <div className="w-[1481px] h-[804px] bg-[#222] rounded-md overflow-hidden relative shadow-lg">
             {imagensCarrossel.map((img, index) => (
               <img 
@@ -86,6 +86,7 @@ export default function Home() {
             <div className="flex w-full items-center justify-end gap-[40px] px-[80px]">
               
               <CaixaProdutos 
+                id="wolverine-1"
                 nota="5.0"
                 imagemProduto={wolverineImg}
                 nomeProduto="Jogo Marvel’s Wolwerine, PS5"
@@ -94,6 +95,7 @@ export default function Home() {
               />
               
               <CaixaProdutos 
+                id="ryzen-1"
                 nota="5.0"
                 imagemProduto={processadorImg}
                 nomeProduto="Processador AMD Ryzen 7 5700X 3.4GHz (4.6GHz Turbo), 8-Cores 16-Threads, AM4, Sem Cooler"
@@ -123,6 +125,7 @@ export default function Home() {
             {[...Array(8)].map((_, i) => (
               <CaixaProdutos 
                 key={i}
+                id={`oferta-${i}`}
                 nota="5.0"
                 imagemProduto={processadorImg}
                 nomeProduto="Processador AMD Ryzen 7 5700X 3.4GHz (4.6GHz Turbo), 8-Cores 16-Threads, AM4, Sem Cooler"
