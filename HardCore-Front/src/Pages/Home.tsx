@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import HeaderAnimado from '../Componentes/HeaderAnimado/HeaderAnimado';
 import CaixaProdutos from '../Componentes/CaixaProdutos/CaixaProdutos';
-import Footer from '../Componentes/Footer/FooterPagamento'; // Ou o caminho do seu Footer
+import Footer from '../Componentes/Footer/FooterPagamento';
 
 import processadorImg from '../Componentes/CaixaProdutos/CaixaProdutosAssets/FotoProduto.png';
 import wolverineImg from '../assets/HomeAsset/image 4.png';
@@ -35,12 +36,13 @@ export default function Home() {
     >
       <HeaderAnimado />
 
-      {/* pt-[180px] adicionado para compensar o header fixo de 140px + margem */}
-      <main className="mx-auto flex w-full max-w-[1509px] flex-col relative pb-20 pt-[180px]">
+      {/* pt-[140px] para encaixar exatamente abaixo do header fixo */}
+      <main className="mx-auto flex w-full max-w-[1509px] flex-col relative pb-20 pt-[130px]">
         
         <div className="w-full h-[1px] bg-black opacity-20 -mt-[1px]" />
 
-        <section className="mt-4 w-full flex justify-center">
+        {/* Removido o mt-4 ou mt-20 para o carrossel colar no header */}
+        <section className="w-full flex justify-center mt-[10px]">
           <div className="w-[1481px] h-[804px] bg-[#222] rounded-md overflow-hidden relative shadow-lg">
             {imagensCarrossel.map((img, index) => (
               <img 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useCarrinho } from '../../Context/CarrinhoContext'; // <-- Importe o contexto (ajuste os '../../' se necessário)
 import DepartamentoButton from '../BotoesHeader/DepartamentoButton';
 import CuponsButton from '../BotoesHeader/CuponsButton';
 import MaisVendidoButton from '../BotoesHeader/MaisVendidosButton';
@@ -19,8 +20,9 @@ import iconCupomBlack from '../BotoesHeader/AssetsBotao/fluent-mdl2_coupon.svg';
 import iconVendidosWhite from '../BotoesHeader/AssetsBotao/iconmind_best-seller-outline-thin-1.svg';
 import iconVendidosBlack from '../BotoesHeader/AssetsBotao/iconmind_best-seller-outline-thin.svg';
 
-export default function HeaderAnimado() {
+export default function HeaderSimples() {
   const [isDepartamentoOpen, setIsDepartamentoOpen] = useState(false);
+  const { quantidadeCarrinho } = useCarrinho(); // <-- Puxa a quantidade dinâmica do contexto
 
   return (
     <header className="fixed top-0 left-0 w-full h-[140px] z-50 bg-white shrink-0 shadow-md flex justify-center items-center">
@@ -33,17 +35,22 @@ export default function HeaderAnimado() {
           style={{ background: 'linear-gradient(168deg, #131313 0%, #3D0000 28%, #200000 50%, #030000 92%)' }}
         />
 
-        <img
-          src={manchaPreta}
-          alt=""
-          className="absolute w-[250px] h-[222px] left-[210px] top-[70px] -translate-x-1/2 -translate-y-1/2 object-contain"
-        />
-          
-        <img 
-          src={logoHardcore} 
-          alt="Logo Hardcore" 
-          className="absolute w-[190px] h-[132px] left-[100px] top-[5px] -rotate-1 origin-top-left"
-        />
+        {/* Link com tamanho fixo atuando como contêiner absoluto */}
+        <Link 
+          to="/home" 
+          className="absolute left-0 top-0 w-[250px] h-[140px] block cursor-pointer pointer-events-auto z-30 transition-transform hover:scale-105"
+        >
+          <img
+            src={manchaPreta}
+            alt=""
+            className="absolute w-[250px] h-[222px] left-[220px] top-[70px] -translate-x-1/2 -translate-y-1/2 object-contain"
+          />
+          <img 
+            src={logoHardcore} 
+            alt="Logo Hardcore" 
+            className="absolute w-[190px] h-[132px] left-[110px] top-[5px] -rotate-1 origin-top-left"
+          />
+        </Link>
       </div>
 
       {/* Container Central Flexível */}
@@ -76,11 +83,22 @@ export default function HeaderAnimado() {
             </span>
           </div>
 
-          <div className="relative flex h-[46px] w-[46px] items-center justify-center cursor-pointer pointer-events-auto">
-            <img src={iconCart} alt="Carrinho" className="h-full w-full object-contain" />
+          {/* Carrinho Dinâmico */}
+          <div className="relative flex h-[46px] w-[46px] items-center justify-center pointer-events-auto">
+            {quantidadeCarrinho > 0 ? (
+              <Link to="/carrinho" className="hover:scale-105 transition-transform cursor-pointer h-full w-full flex items-center justify-center">
+                <img src={iconCart} alt="Carrinho" className="h-full w-full object-contain" />
+              </Link>
+            ) : (
+              <div className="h-full w-full opacity-70 cursor-not-allowed flex items-center justify-center">
+                <img src={iconCart} alt="Carrinho" className="h-full w-full object-contain" />
+              </div>
+            )}
             
-            <div className="absolute top-0 right-0 flex h-[20px] w-[20px] items-center justify-center rounded-full shadow-md bg-gradient-to-b from-[#FEFEFE] to-black">
-              <span className="font-['Iosevka_Charon'] text-[12px] font-normal text-[#00174F] pt-[2px]">0</span>
+            <div className="absolute top-0 right-0 flex h-[20px] w-[20px] items-center justify-center rounded-full shadow-md bg-gradient-to-b from-[#FEFEFE] to-black pointer-events-none">
+              <span className="font-['Iosevka_Charon'] text-[12px] font-normal text-[#00174F] pt-[2px]">
+                {quantidadeCarrinho}
+              </span>
             </div>
           </div>
         </div>

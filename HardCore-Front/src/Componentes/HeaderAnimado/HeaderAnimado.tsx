@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useCarrinho } from '../../Context/CarrinhoContext'; // <-- 1. Importe o Contexto (verifique se os '../../' estão certos para a sua pasta)
 import DepartamentoButton from '../BotoesHeader/DepartamentoButton';
 import CuponsButton from '../BotoesHeader/CuponsButton';
 import MaisVendidoButton from '../BotoesHeader/MaisVendidosButton';
@@ -28,6 +29,7 @@ const gradients = {
 export default function HeaderAnimado() {
   const [isDepartamentoOpen, setIsDepartamentoOpen] = useState(false);
   const [variant, setVariant] = useState<1 | 2 | 3>(1);
+  const { quantidadeCarrinho } = useCarrinho(); // <-- 2. Puxe a quantidade dinâmica do contexto
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -44,9 +46,14 @@ export default function HeaderAnimado() {
         <div className={`absolute inset-0 transition-opacity duration-1000 ${variant === 2 ? 'opacity-100' : 'opacity-0'}`} style={{ background: gradients[2] }} />
         <div className={`absolute inset-0 transition-opacity duration-1000 ${variant === 3 ? 'opacity-100' : 'opacity-0'}`} style={{ background: gradients[3] }} />
         
-        {/* Logo fixa à esquerda do background */}
-        <img src={manchaPreta} alt="" className="absolute w-[250px] h-[222px] left-[210px] top-[70px] -translate-x-1/2 -translate-y-1/2 object-contain" />
-        <img src={logoHardcore} alt="Logo Hardcore" className="absolute w-[190px] h-[132px] left-[100px] top-[5px] -rotate-1" />
+        {/* Link com tamanho fixo atuando como contêiner absoluto */}
+        <Link 
+          to="/home" 
+          className="absolute left-0 top-0 w-[250px] h-[140px] block cursor-pointer pointer-events-auto z-30 transition-transform hover:scale-105"
+        >
+          <img src={manchaPreta} alt="" className="absolute w-[250px] h-[222px] left-[220px] top-[70px] -translate-x-1/2 -translate-y-1/2 object-contain" />
+          <img src={logoHardcore} alt="Logo Hardcore" className="absolute w-[190px] h-[132px] left-[110px] top-[5px] -rotate-1 origin-top-left" />
+        </Link>
       </div>
 
       {/* Container Central Flexível */}
@@ -73,12 +80,25 @@ export default function HeaderAnimado() {
               <Link to="/login" className="hover:text-[#B3B3B3] transition-colors cursor-pointer pointer-events-auto">Entre</Link> ou<br />
               <Link to="/cadastro" className="hover:text-[#B3B3B3] transition-colors cursor-pointer pointer-events-auto">Cadastre-se</Link>
             </span>
+
           </div>
 
-          <div className="relative flex h-[46px] w-[46px] items-center justify-center cursor-pointer pointer-events-auto">
-            <img src={iconCart} alt="Carrinho" className="h-full w-full object-contain" />
-            <div className="absolute top-0 right-0 flex h-[20px] w-[20px] items-center justify-center rounded-full shadow-md bg-gradient-to-b from-[#FEFEFE] to-black">
-              <span className="font-['Iosevka_Charon'] text-[12px] font-normal text-[#00174F] pt-[2px]">0</span>
+          {/* Carrinho Dinâmico */}
+          <div className="relative flex h-[46px] w-[46px] items-center justify-center pointer-events-auto">
+            {quantidadeCarrinho > 0 ? (
+              <Link to="/carrinho" className="hover:scale-105 transition-transform cursor-pointer h-full w-full flex items-center justify-center">
+                <img src={iconCart} alt="Carrinho" className="h-full w-full object-contain" />
+              </Link>
+            ) : (
+              <div className="h-full w-full opacity-70 cursor-not-allowed flex items-center justify-center">
+                <img src={iconCart} alt="Carrinho" className="h-full w-full object-contain" />
+              </div>
+            )}
+            
+            <div className="absolute top-0 right-0 flex h-[20px] w-[20px] items-center justify-center rounded-full shadow-md bg-gradient-to-b from-[#FEFEFE] to-black pointer-events-none">
+              <span className="font-['Iosevka_Charon'] text-[12px] font-normal text-[#00174F] pt-[2px]">
+                {quantidadeCarrinho} {/* <-- 3. Exibe a quantidade real */}
+              </span>
             </div>
           </div>
         </div>
