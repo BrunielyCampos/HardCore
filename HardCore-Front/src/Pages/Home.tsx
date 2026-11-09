@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import HeaderAnimado from '../Componentes/HeaderAnimado/HeaderAnimado';
 import CaixaProdutos from '../Componentes/CaixaProdutos/CaixaProdutos';
 
@@ -12,7 +12,24 @@ import promo3 from '../assets/HomeAsset/3.png';
 import promo4 from '../assets/HomeAsset/4.png'; 
 import bannerHorizontal from '../assets/HomeAsset/RodapeAnuncio.png'; 
 
+// Importação das imagens do Carrossel
+import carrossel1 from '../assets/HomeAsset/Carrossel1.jpg';
+import carrossel2 from '../assets/HomeAsset/Carrossel2.png';
+import carrossel3 from '../assets/HomeAsset/Carrossel3.png';
+
+const imagensCarrossel = [carrossel1, carrossel2, carrossel3];
+
 export default function Home() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Efeito para trocar o slide do carrossel automaticamente a cada 5 segundos (5000ms)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev === imagensCarrossel.length - 1 ? 0 : prev + 1));
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div 
       className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-black font-['Inter']"
@@ -24,11 +41,33 @@ export default function Home() {
         
         <div className="w-full h-[1px] bg-black opacity-20 -mt-[1px]" />
 
-        {/* Banner Principal do Carrossel */}
-        <section className="mt-8 w-full flex justify-center">
-          <div className="w-[1481px] h-[796px] bg-[#222] rounded-md overflow-hidden flex items-center justify-center">
-             {/* Placeholder para o banner principal do carrossel */}
-            <img src="https://placehold.co/1481x804" alt="Banner Principal" className="w-full h-full object-cover" />
+        {/* Banner Principal do Carrossel (1481x804 com transição automática) */}
+       <section className="mt-20 w-full flex justify-center">
+          <div className="w-[1481px] h-[804px] bg-[#222] rounded-md overflow-hidden relative shadow-lg">
+            {imagensCarrossel.map((img, index) => (
+              <img 
+                key={index}
+                src={img} 
+                alt={`Banner Carrossel ${index + 1}`} 
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${
+                  index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                }`}
+              />
+            ))}
+
+            {/* Indicadores (bolinhas) do carrossel na parte inferior */}
+            <div className="absolute bottom-4 left-0 right-0 z-20 flex justify-center gap-2">
+              {imagensCarrossel.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`h-3 rounded-full transition-all duration-300 ${
+                    index === currentSlide ? 'w-8 bg-white' : 'w-3 bg-white/50'
+                  }`}
+                  aria-label={`Ir para slide ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </section>
 

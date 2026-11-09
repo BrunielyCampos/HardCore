@@ -23,108 +23,93 @@ export default function HeaderAnimado() {
   const [isDepartamentoOpen, setIsDepartamentoOpen] = useState(false);
 
   return (
-    <header className="relative w-full h-[326px] z-50 bg-white">
+    <header className="fixed top-0 left-0 w-full h-[140px] z-50 bg-white shrink-0 shadow-md flex justify-center items-center">
       
+      {/* Background e Logos */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {/* Fundo Estático Vermelho */}
         <div 
-          className="absolute left-0 top-0 w-full h-[326px]"
+          className="absolute inset-0 w-full h-[140px]"
           style={{ background: 'linear-gradient(168deg, #131313 0%, #3D0000 28%, #200000 50%, #030000 92%)' }}
         />
 
         <img
           src={manchaPreta}
           alt=""
-          className="absolute"
-          style={{
-            width: '500px',
-            height: '445px',
-            left: '250px',
-            top: '163px',
-            transform: 'translate(-50%, -50%) rotate(-0deg)',
-            transformOrigin: 'center center',
-            objectFit: 'contain'
-          }}
+          className="absolute w-[250px] h-[222px] left-[120px] top-[70px] -translate-x-1/2 -translate-y-1/2 object-contain"
         />
           
         <img 
           src={logoHardcore} 
           alt="Logo Hardcore" 
-          className="absolute"
-          style={{
-            width: '428px',
-            height: '297px',
-            left: '-6px',
-            top: '30px',
-            transform: 'rotate(-1deg)',
-            transformOrigin: 'top left'
-          }}
+          className="absolute w-[190px] h-[132px] left-[10px] top-[5px] -rotate-1 origin-top-left"
         />
       </div>
 
-      <div className="absolute left-[456px] top-[97px] flex items-center gap-[10px] z-20">
-        <div className="flex h-[46px] w-[46px] items-center justify-center overflow-hidden">
-          <img src={iconLocal} alt="Local" className="h-full w-full object-contain" />
-        </div>
-        <div className="flex flex-col">
-          <span className="font-['Inter'] text-[22.40px] font-semibold text-white leading-tight">Enviar para:</span>
-          <span className="font-['Inter'] text-[18.77px] font-light italic text-white leading-tight">Digite o CEP</span>
-        </div>
-      </div>
-
-      <div className="absolute left-[660px] top-[90px] flex h-[56px] w-[426.36px] items-center gap-[14px] rounded-tl-[24.18px] rounded-br-[26.73px] rounded-bl-[5.09px] bg-white px-[10.18px] shadow-lg z-20">
-        <div className="flex h-[30.55px] w-[30.55px] items-center justify-center overflow-hidden">
-          <img src={iconSearch} alt="Buscar" className="h-full w-full object-contain opacity-70" />
-        </div>
-        <input 
-          type="text" 
-          placeholder="Buscar produtos" 
-          className="w-full bg-transparent font-['Inter'] text-[28.51px] font-extralight italic text-black placeholder:text-black/40 focus:outline-none"
-        />
-      </div>
-
-      <div className="absolute left-[1108px] top-[80px] flex items-center gap-[15px] z-20">
-        <div className="flex h-[62px] w-[62px] items-center justify-center overflow-hidden">
-          <img src={iconUser} alt="Perfil" className="h-full w-full object-contain" />
-        </div>
-        <span className="font-['Inter'] text-[18.85px] font-bold text-white leading-tight">
-          <Link to="/login" className="hover:text-[#B3B3B3] transition-colors cursor-pointer pointer-events-auto">Entre</Link> ou<br />
-          <Link to="/cadastro" className="hover:text-[#B3B3B3] transition-colors cursor-pointer pointer-events-auto">Cadastre-se</Link>
-        </span>
-      </div>
-
-      <div className="absolute left-[1308px] top-[71px] flex h-[66px] w-[66px] items-center justify-center overflow-hidden z-20 cursor-pointer pointer-events-auto">
-        <img src={iconCart} alt="Carrinho" className="h-full w-full object-contain" />
+      {/* Container Central Flexível */}
+      <div className="relative z-20 flex flex-col justify-center items-center gap-[15px] w-full max-w-[1000px] ml-[150px]">
         
-        <div className="absolute top-[0px] right-[0px] flex h-[31px] w-[31px] items-center justify-center rounded-full shadow-md"
-             style={{ background: 'linear-gradient(180deg, #FEFEFE 41%, black 100%)' }}>
-          <span className="font-['Iosevka_Charon'] text-[18px] font-normal text-[#00174F] pt-[2px]">0</span>
-        </div>
-      </div>
+        {/* Linha 1: Input e Acessos */}
+        <div className="flex items-center justify-center gap-[30px] w-full">
+          <div className="flex items-center gap-[10px]">
+            <img src={iconLocal} alt="Local" className="h-[36px] w-[36px] object-contain" />
+            <div className="flex flex-col">
+              <span className="font-['Inter'] text-[15px] font-semibold text-white leading-tight">Enviar para:</span>
+              <span className="font-['Inter'] text-[13px] font-light italic text-white leading-tight">Digite o CEP</span>
+            </div>
+          </div>
 
-      <div className="absolute left-[470px] top-[186.22px] flex items-center gap-[20px] z-30">
-        <div className="relative">
-          <DepartamentoButton 
-            label="Departamento" 
-            iconWhite={iconDeptWhite} 
-            iconBlack={iconDeptBlack}
-            isOpen={isDepartamentoOpen} 
-            onClick={() => setIsDepartamentoOpen(!isDepartamentoOpen)}
+          <div className="flex h-[40px] w-[380px] items-center gap-[14px] rounded-tl-[20px] rounded-br-[20px] rounded-bl-[5px] bg-white px-[15px] shadow-lg">
+            <img src={iconSearch} alt="Buscar" className="h-[20px] w-[20px] object-contain opacity-70" />
+            <input 
+              type="text" 
+              placeholder="Buscar produtos" 
+              className="w-full bg-transparent font-['Inter'] text-[16px] font-extralight italic text-black placeholder:text-black/40 focus:outline-none"
+            />
+          </div>
+
+          <div className="flex items-center gap-[10px]">
+            <img src={iconUser} alt="Perfil" className="h-[40px] w-[40px] object-contain" />
+            <span className="font-['Inter'] text-[14px] font-bold text-white leading-tight">
+              <Link to="/login" className="hover:text-[#B3B3B3] transition-colors cursor-pointer pointer-events-auto">Entre</Link> ou<br />
+              <Link to="/cadastro" className="hover:text-[#B3B3B3] transition-colors cursor-pointer pointer-events-auto">Cadastre-se</Link>
+            </span>
+          </div>
+
+          <div className="relative flex h-[46px] w-[46px] items-center justify-center cursor-pointer pointer-events-auto">
+            <img src={iconCart} alt="Carrinho" className="h-full w-full object-contain" />
+            
+            <div className="absolute top-0 right-0 flex h-[20px] w-[20px] items-center justify-center rounded-full shadow-md bg-gradient-to-b from-[#FEFEFE] to-black">
+              <span className="font-['Iosevka_Charon'] text-[12px] font-normal text-[#00174F] pt-[2px]">0</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Linha 2: Botões */}
+        <div className="flex items-center justify-center gap-[20px] w-full mr-[120px]">
+          <div className="relative">
+            <DepartamentoButton 
+              label="Departamento" 
+              iconWhite={iconDeptWhite} 
+              iconBlack={iconDeptBlack}
+              isOpen={isDepartamentoOpen} 
+              onClick={() => setIsDepartamentoOpen(!isDepartamentoOpen)}
+            />
+            <DepartamentoDropdown isOpen={isDepartamentoOpen} />
+          </div>
+
+          <CuponsButton 
+            label="Cupons" 
+            iconWhite={iconCupomWhite} 
+            iconBlack={iconCupomBlack} 
           />
-          <DepartamentoDropdown isOpen={isDepartamentoOpen} />
+
+          <MaisVendidoButton 
+            label="Mais vendidos" 
+            iconWhite={iconVendidosWhite} 
+            iconBlack={iconVendidosBlack} 
+          />
         </div>
-
-        <CuponsButton 
-          label="Cupons" 
-          iconWhite={iconCupomWhite} 
-          iconBlack={iconCupomBlack} 
-        />
-
-        <MaisVendidoButton 
-          label="Mais vendidos" 
-          iconWhite={iconVendidosWhite} 
-          iconBlack={iconVendidosBlack} 
-        />
       </div>
     </header>
   );
