@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import HeaderSimples from '../Componentes/HeaderSimples/HeaderSimples';
 import Footer from '../Componentes/Footer/FooterPagamento';
 import { useCarrinho } from '../Context/CarrinhoContext';
@@ -11,6 +11,7 @@ import iconConfirmacao from '../assets/InformacoesAsset/Confirmacao.svg';
 
 export default function Carrinho() {
   const { itens, valorTotal, alterarQuantidade, removerDoCarrinho, limparCarrinho } = useCarrinho();
+  const navigate = useNavigate();
 
   return (
     <div 
@@ -183,6 +184,7 @@ export default function Carrinho() {
             <div className="flex flex-col gap-[15px]">
               <button 
                 disabled={itens.length === 0}
+                onClick={() => navigate('/identificacao')}
                 className="w-full h-[55px] bg-[#FF0000] text-white font-['Inter'] font-bold text-[18px] rounded-[5px] hover:bg-[#cc0000] transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 CONTINUAR

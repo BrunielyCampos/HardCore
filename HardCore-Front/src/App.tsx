@@ -4,11 +4,14 @@ import Login from './Pages/Login';
 import Home from './Pages/Home';
 import PaginaItem from './Pages/AbaDoItem';
 import Carrinho from './Pages/Carrinho';
-import { CarrinhoProvider } from './Context/CarrinhoContext'; // Importe o Provider
+import Identificacao from './Pages/Identificacao';
+import Pagamento from './Pages/Pagamento';
+import { CarrinhoProvider } from './Context/CarrinhoContext'; 
+
 
 export default function App() {
   return (
-    // O Provider tem de estar no topo de tudo!
+
     <CarrinhoProvider>
       <BrowserRouter>
         <Routes>
@@ -18,6 +21,8 @@ export default function App() {
           <Route path="/cadastro" element={<Cadastro />} />
           <Route path="/produto/:id" element={<PaginaItem />} />
           <Route path="/carrinho" element={<Carrinho />} />
+          <Route path="/identificacao" element={<Identificacao />} />
+          <Route path="/pagamento" element={<Pagamento />} />
         </Routes>
       </BrowserRouter>
     </CarrinhoProvider>
