@@ -6,6 +6,7 @@ import PaginaItem from './Pages/AbaDoItem';
 import Carrinho from './Pages/Carrinho';
 import Identificacao from './Pages/Identificacao';
 import Pagamento from './Pages/Pagamento';
+import Confirmacao from './Pages/Confirmacao';
 import { CarrinhoProvider } from './Context/CarrinhoContext'; 
 
 
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/carrinho" element={<Carrinho />} />
           <Route path="/identificacao" element={<Identificacao />} />
           <Route path="/pagamento" element={<Pagamento />} />
+          <Route path="/confirmacao" element={<Confirmacao />} />
         </Routes>
       </BrowserRouter>
     </CarrinhoProvider>

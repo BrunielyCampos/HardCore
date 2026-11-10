@@ -97,7 +97,7 @@ export default function Pagamento() {
                 onClick={() => navigate('/confirmacao')}
                 className="flex-1 h-[70px] bg-[#FF0000] rounded-[10px] flex items-center justify-center text-white text-[20px] font-['Inter'] font-bold hover:bg-[#cc0000] transition-transform active:scale-95 cursor-pointer shadow-[0_0_15px_rgba(255,0,0,0.4)]"
               >
-                SIMULAR PAGAMENTO
+                CONTINUAR
               </button>
             </div>
 
