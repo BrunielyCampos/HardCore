@@ -1,4 +1,7 @@
-import { createContext, useState, useContext, type ReactNode } from 'react';
+import { createContext, useState, useContext } from 'react';
+import type { ReactNode } from 'react';
+
+export type SecaoVitrine = 'Destaque' | 'Oferta' | 'Nenhuma';
 
 export interface Produto {
   id: string;
@@ -11,6 +14,7 @@ export interface Produto {
   estoque: number;
   status: 'Publicado' | 'Rascunho' | 'Arquivado';
   imagemPrincipal: string;
+  secaoVitrine: SecaoVitrine;
 }
 
 interface ProdutoContextData {
@@ -23,7 +27,6 @@ interface ProdutoContextData {
 const ProdutoContext = createContext<ProdutoContextData>({} as ProdutoContextData);
 
 export function ProdutoProvider({ children }: { children: ReactNode }) {
-  // O estado começa VAZIO, como você pediu. Você vai cadastrar tudo!
   const [produtos, setProdutos] = useState<Produto[]>([]);
 
   const adicionarProduto = (produto: Produto) => {
@@ -45,6 +48,4 @@ export function ProdutoProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useProdutos() {
-  return useContext(ProdutoContext);
-}
+export const useProdutos = () => useContext(ProdutoContext);

@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import HeaderAnimado from '../Componentes/HeaderAnimado/HeaderAnimado';
 import CaixaProdutos from '../Componentes/CaixaProdutos/CaixaProdutos';
 import Footer from '../Componentes/Footer/FooterPagamento';
-import { useProdutos } from '../Context/ProdutoContext'; // <-- Trazemos a memória central!
+import { useProdutos } from '../Context/ProdutoContext';
 
-// Imagens Promocionais e Banners Fixos
 import wolverineSplash from '../assets/HomeAsset/image 3.png';
 import promo1 from '../assets/HomeAsset/1.png'; 
 import promo2 from '../assets/HomeAsset/2.png'; 
 import promo3 from '../assets/HomeAsset/3.png'; 
 import promo4 from '../assets/HomeAsset/4.png'; 
 import bannerHorizontal from '../assets/HomeAsset/RodapeAnuncio.png'; 
-
 import carrossel1 from '../assets/HomeAsset/Carrossel1.jpg';
 import carrossel2 from '../assets/HomeAsset/Carrossel2.png';
 import carrossel3 from '../assets/HomeAsset/Carrossel3.png';
@@ -22,15 +19,11 @@ const imagensCarrossel = [carrossel1, carrossel2, carrossel3];
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // 1. Extraímos os produtos do nosso Contexto
   const { produtos } = useProdutos();
-
-  // 2. Filtramos APENAS os produtos que o Administrador definiu como 'Publicado'
+  
   const produtosPublicados = produtos.filter(p => p.status === 'Publicado');
-
-  // Separamos os produtos (ex: os 2 primeiros para Destaque, o resto para Oferta)
-  const produtosDestaque = produtosPublicados.slice(0, 2);
-  const produtosOferta = produtosPublicados.slice(2, 10); // Mostra no máximo 8 em oferta
+  const produtosDestaque = produtosPublicados.filter(p => p.secaoVitrine === 'Destaque').slice(0, 2);
+  const produtosOferta = produtosPublicados.filter(p => p.secaoVitrine === 'Oferta').slice(0, 8);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -47,10 +40,8 @@ export default function Home() {
       <HeaderAnimado />
 
       <main className="mx-auto flex w-full max-w-[1509px] flex-col relative pb-20 pt-[130px]">
-        
         <div className="w-full h-[1px] bg-black opacity-20 -mt-[1px]" />
 
-        {/* ========== CARROSSEL ========== */}
         <section className="w-full flex justify-center mt-[10px]">
           <div className="w-[1481px] h-[804px] bg-[#222] rounded-md overflow-hidden relative shadow-lg">
             {imagensCarrossel.map((img, index) => (
@@ -63,7 +54,6 @@ export default function Home() {
                 }`}
               />
             ))}
-
             <div className="absolute bottom-4 left-0 right-0 z-20 flex justify-center gap-2">
               {imagensCarrossel.map((_, index) => (
                 <button
@@ -79,7 +69,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ========== EM DESTAQUE (Gerado Dinamicamente) ========== */}
         <section className="relative mt-[130px] flex w-full flex-col px-[70px]">
           <h2 className="mb-6 ml-[268px] font-['Iosevka_Charon'] text-[49.60px] font-bold text-[#ACACAC]">
             EM DESTAQUE
@@ -96,7 +85,6 @@ export default function Home() {
             style={{ background: 'linear-gradient(180deg, #DFDDD8 0%, #B17E07 100%)' }}
           >
             <div className="flex w-full items-center justify-end gap-[40px] px-[80px]">
-              
               {produtosDestaque.length > 0 ? (
                 produtosDestaque.map((prod) => (
                   <CaixaProdutos 
@@ -114,12 +102,10 @@ export default function Home() {
                   Nenhum produto em destaque no momento. Cadastre no Painel!
                 </div>
               )}
-
             </div>
           </div>
         </section>
 
-        {/* ========== BANNERS DE CATEGORIAS ========== */}
         <section className="mt-[280px] px-[70px]">
           <div className="flex w-full justify-between gap-[30px]">
             <img src={promo1} alt="Monitores" className="h-[406px] w-[295px] rounded-[6px] shadow-[0px_7px_7px_rgba(0,0,0,0.25)] object-cover" />
@@ -129,7 +115,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ========== EM OFERTA (Restante dos Produtos Publicados) ========== */}
         <section className="mt-[150px] flex w-full flex-col px-[70px]">
           <h2 className="mb-[20px] ml-[10px] font-['Iosevka_Charon'] text-[40.22px] font-bold text-white">
             EM OFERTA
@@ -141,7 +126,7 @@ export default function Home() {
                 <CaixaProdutos 
                   key={prod.id}
                   id={prod.id}
-                  nota="5.0" // Pode ser gerado aleatoriamente se não houver no objeto
+                  nota="5.0"
                   imagemProduto={prod.imagemPrincipal || "https://placehold.co/200x200"}
                   nomeProduto={prod.nome}
                   preco={`R$ ${prod.precoVenda.toFixed(2).replace('.', ',')}`}
@@ -149,14 +134,13 @@ export default function Home() {
                 />
               ))
             ) : (
-              <span className="col-span-4 text-white/50 text-[18px] ml-[10px] italic">
+              <span className="col-span-4 text-white/50 text-[18px] ml-[10px] italic font-['Iosevka_Charon']">
                 Sem ofertas no momento. Acesse o Gerenciador e publique novos produtos para preencher esta vitrine.
               </span>
             )}
           </div>
         </section>
 
-        {/* ========== BANNER FINAL ========== */}
         <section className="mt-[150px] px-[20px]">
           <img src={bannerHorizontal} alt="Oferta Especial" className="w-full rounded-[10px] object-cover" />
         </section>
