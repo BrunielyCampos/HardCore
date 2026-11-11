@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import HeaderAnimado from '../Componentes/HeaderAnimado/HeaderAnimado';
 import CaixaProdutos from '../Componentes/CaixaProdutos/CaixaProdutos';
 import Footer from '../Componentes/Footer/FooterPagamento';
+import { useProdutos } from '../Context/ProdutoContext'; // <-- Trazemos a memória central!
 
-import processadorImg from '../Componentes/CaixaProdutos/CaixaProdutosAssets/FotoProduto.png';
-import wolverineImg from '../assets/HomeAsset/image 4.png';
+// Imagens Promocionais e Banners Fixos
 import wolverineSplash from '../assets/HomeAsset/image 3.png';
 import promo1 from '../assets/HomeAsset/1.png'; 
 import promo2 from '../assets/HomeAsset/2.png'; 
@@ -22,6 +22,16 @@ const imagensCarrossel = [carrossel1, carrossel2, carrossel3];
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  // 1. Extraímos os produtos do nosso Contexto
+  const { produtos } = useProdutos();
+
+  // 2. Filtramos APENAS os produtos que o Administrador definiu como 'Publicado'
+  const produtosPublicados = produtos.filter(p => p.status === 'Publicado');
+
+  // Separamos os produtos (ex: os 2 primeiros para Destaque, o resto para Oferta)
+  const produtosDestaque = produtosPublicados.slice(0, 2);
+  const produtosOferta = produtosPublicados.slice(2, 10); // Mostra no máximo 8 em oferta
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev === imagensCarrossel.length - 1 ? 0 : prev + 1));
@@ -36,12 +46,11 @@ export default function Home() {
     >
       <HeaderAnimado />
 
-      {/* pt-[140px] para encaixar exatamente abaixo do header fixo */}
       <main className="mx-auto flex w-full max-w-[1509px] flex-col relative pb-20 pt-[130px]">
         
         <div className="w-full h-[1px] bg-black opacity-20 -mt-[1px]" />
 
-        {/* Removido o mt-4 ou mt-20 para o carrossel colar no header */}
+        {/* ========== CARROSSEL ========== */}
         <section className="w-full flex justify-center mt-[10px]">
           <div className="w-[1481px] h-[804px] bg-[#222] rounded-md overflow-hidden relative shadow-lg">
             {imagensCarrossel.map((img, index) => (
@@ -70,6 +79,7 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ========== EM DESTAQUE (Gerado Dinamicamente) ========== */}
         <section className="relative mt-[130px] flex w-full flex-col px-[70px]">
           <h2 className="mb-6 ml-[268px] font-['Iosevka_Charon'] text-[49.60px] font-bold text-[#ACACAC]">
             EM DESTAQUE
@@ -87,28 +97,29 @@ export default function Home() {
           >
             <div className="flex w-full items-center justify-end gap-[40px] px-[80px]">
               
-              <CaixaProdutos 
-                id="wolverine-1"
-                nota="5.0"
-                imagemProduto={wolverineImg}
-                nomeProduto="Jogo Marvel’s Wolwerine, PS5"
-                preco="R$ 300,00"
-                parcelamento="No PIX ou 10x de R$ 30,00"
-              />
-              
-              <CaixaProdutos 
-                id="ryzen-1"
-                nota="5.0"
-                imagemProduto={processadorImg}
-                nomeProduto="Processador AMD Ryzen 7 5700X 3.4GHz (4.6GHz Turbo), 8-Cores 16-Threads, AM4, Sem Cooler"
-                preco="R$ 1.199,99"
-                parcelamento="No PIX ou 12x de R$ 117,65"
-              />
+              {produtosDestaque.length > 0 ? (
+                produtosDestaque.map((prod) => (
+                  <CaixaProdutos 
+                    key={prod.id}
+                    id={prod.id}
+                    nota="5.0"
+                    imagemProduto={prod.imagemPrincipal || "https://placehold.co/200x200"}
+                    nomeProduto={prod.nome}
+                    preco={`R$ ${prod.precoVenda.toFixed(2).replace('.', ',')}`}
+                    parcelamento={`No PIX ou 10x de R$ ${(prod.precoVenda / 10).toFixed(2).replace('.', ',')}`}
+                  />
+                ))
+              ) : (
+                <div className="w-full flex justify-center text-white/50 italic font-['Iosevka_Charon'] text-xl">
+                  Nenhum produto em destaque no momento. Cadastre no Painel!
+                </div>
+              )}
 
             </div>
           </div>
         </section>
 
+        {/* ========== BANNERS DE CATEGORIAS ========== */}
         <section className="mt-[280px] px-[70px]">
           <div className="flex w-full justify-between gap-[30px]">
             <img src={promo1} alt="Monitores" className="h-[406px] w-[295px] rounded-[6px] shadow-[0px_7px_7px_rgba(0,0,0,0.25)] object-cover" />
@@ -118,26 +129,34 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ========== EM OFERTA (Restante dos Produtos Publicados) ========== */}
         <section className="mt-[150px] flex w-full flex-col px-[70px]">
           <h2 className="mb-[20px] ml-[10px] font-['Iosevka_Charon'] text-[40.22px] font-bold text-white">
             EM OFERTA
           </h2>
 
           <div className="grid grid-cols-4 gap-y-[20px] gap-x-[30px] w-[1364px]">
-            {[...Array(8)].map((_, i) => (
-              <CaixaProdutos 
-                key={i}
-                id={`oferta-${i}`}
-                nota="5.0"
-                imagemProduto={processadorImg}
-                nomeProduto="Processador AMD Ryzen 7 5700X 3.4GHz (4.6GHz Turbo), 8-Cores 16-Threads, AM4, Sem Cooler"
-                preco="R$ 1.199,99"
-                parcelamento="No PIX ou 12x de R$ 117,65"
-              />
-            ))}
+            {produtosOferta.length > 0 ? (
+              produtosOferta.map((prod) => (
+                <CaixaProdutos 
+                  key={prod.id}
+                  id={prod.id}
+                  nota="5.0" // Pode ser gerado aleatoriamente se não houver no objeto
+                  imagemProduto={prod.imagemPrincipal || "https://placehold.co/200x200"}
+                  nomeProduto={prod.nome}
+                  preco={`R$ ${prod.precoVenda.toFixed(2).replace('.', ',')}`}
+                  parcelamento={`No PIX ou 10x de R$ ${(prod.precoVenda / 10).toFixed(2).replace('.', ',')}`}
+                />
+              ))
+            ) : (
+              <span className="col-span-4 text-white/50 text-[18px] ml-[10px] italic">
+                Sem ofertas no momento. Acesse o Gerenciador e publique novos produtos para preencher esta vitrine.
+              </span>
+            )}
           </div>
         </section>
 
+        {/* ========== BANNER FINAL ========== */}
         <section className="mt-[150px] px-[20px]">
           <img src={bannerHorizontal} alt="Oferta Especial" className="w-full rounded-[10px] object-cover" />
         </section>
