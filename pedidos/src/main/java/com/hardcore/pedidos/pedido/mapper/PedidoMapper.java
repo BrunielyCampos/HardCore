@@ -11,7 +11,7 @@ import com.hardcore.pedidos.pedido.model.Pedido;
 public interface PedidoMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "dataCompra", expression = "java(new java.util.Date())")
+    @Mapping(target = "dataCompra", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "estado", expression = "java(EstadoCompraEnum.A_COMPRAR)")
     Pedido toEntity(PedidoRequestDTO dto);
 
