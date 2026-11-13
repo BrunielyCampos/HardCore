@@ -5,7 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.Date;
 import com.hardcore.pedidos.pedido.model.EstadoCompraEnum;
+import com.hardcore.pedidos.pedido.model.EstadoPagamentoEnum;
 import com.hardcore.pedidos.pedido.model.TipoPagamentoEnum;
+
 
 @Data
 @NoArgsConstructor
@@ -17,4 +19,7 @@ public class PedidoResponseDTO {
     private Date dataCompra;
     private EstadoCompraEnum estado;
     private TipoPagamentoEnum tipoPagamento;
+    private EstadoPagamentoEnum estadoPagamento;
+    private String abacatePayCheckoutId;
+    private String urlPagamento;
 }

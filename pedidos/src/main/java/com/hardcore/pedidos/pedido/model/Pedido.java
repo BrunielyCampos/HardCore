@@ -32,4 +32,14 @@ public class Pedido {
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_pagamento", nullable = false)
     private TipoPagamentoEnum tipoPagamento;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status_pagamento", nullable = false)
+    private EstadoPagamentoEnum estadoPagamento = EstadoPagamentoEnum.PENDENTE;
+
+    @Column(name = "abacatepay_checkout_id")
+    private String abacatePayCheckoutId;
+
+    @Column(name = "url_pagamento")
+    private String urlPagamento;
 }
