@@ -13,6 +13,9 @@ public interface PedidoMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "dataCompra", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "estado", expression = "java(EstadoCompraEnum.A_COMPRAR)")
+    @Mapping(target = "abacatePayCheckoutId", ignore = true)
+    @Mapping(target = "estadoPagamento", ignore = true)
+    @Mapping(target = "urlPagamento", ignore = true)
     Pedido toEntity(PedidoRequestDTO dto);
 
     PedidoResponseDTO toDTO(Pedido pedido);

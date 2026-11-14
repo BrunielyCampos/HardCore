@@ -1,15 +1,16 @@
 package com.hardcore.pedidos.pedido.controller;
 
+import com.hardcore.pedidos.abacatepayapi.service.PagamentoService;
+import com.hardcore.pedidos.pedido.dto.PedidoRequestDTO;
+import com.hardcore.pedidos.pedido.dto.PedidoResponseDTO;
+import com.hardcore.pedidos.pedido.model.EstadoCompraEnum;
+import com.hardcore.pedidos.pedido.routes.RotasPedido;
+import com.hardcore.pedidos.pedido.service.PedidoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.hardcore.pedidos.pedido.dto.PedidoResponseDTO;
-import com.hardcore.pedidos.pedido.service.PedidoService;
-import com.hardcore.pedidos.pedido.dto.PedidoRequestDTO;
-import com.hardcore.pedidos.pedido.model.EstadoCompraEnum;
-import com.hardcore.pedidos.pedido.routes.RotasPedido;
 import java.util.List;
 
 @RestController
@@ -17,6 +18,7 @@ import java.util.List;
 public class PedidoController {
 
     private final PedidoService pedidoService;
+    private final PagamentoService pagamentoService;
 
     @PostMapping(RotasPedido.CRIAR)
     public ResponseEntity<PedidoResponseDTO> criarPedido(@RequestBody @Valid PedidoRequestDTO requestDTO) {
@@ -40,8 +42,7 @@ public class PedidoController {
     }
 
     @PatchMapping(RotasPedido.CANCELAR)
-    public ResponseEntity<Void> cancelarPedido(@PathVariable Long id) {
-        pedidoService.cancelarPedido(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<PedidoResponseDTO> cancelarPedido(@PathVariable Long id) {
+        return ResponseEntity.ok(pagamentoService.cancelarPagamento(id));
     }
 }

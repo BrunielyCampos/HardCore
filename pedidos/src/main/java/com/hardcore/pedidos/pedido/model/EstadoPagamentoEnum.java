@@ -4,5 +4,7 @@ public enum EstadoPagamentoEnum {
     PENDENTE,
     PAGO,
     ESTORNADO,
-    EM_DISPUTA
+    EM_DISPUTA,
+    CANCELADO,
+    FALHOU
 }
