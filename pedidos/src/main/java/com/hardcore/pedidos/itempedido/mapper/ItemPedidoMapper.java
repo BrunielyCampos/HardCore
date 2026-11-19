@@ -10,6 +10,7 @@ import com.hardcore.pedidos.itempedido.model.ItemPedido;
 public interface ItemPedidoMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "pedido", ignore = true)
     ItemPedido toEntity(ItemPedidoRequestDTO dto);
 
     ItemPedidoResponseDTO toDTO(ItemPedido itemPedido);

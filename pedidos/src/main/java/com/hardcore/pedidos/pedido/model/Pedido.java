@@ -4,7 +4,11 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
+import java.util.List;
+import com.hardcore.pedidos.itempedido.model.ItemPedido;
 
 @Entity
 @Table(name = "tb_pedido")
@@ -12,6 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Pedido {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -42,4 +47,9 @@ public class Pedido {
 
     @Column(name = "url_pagamento")
     private String urlPagamento;
+
+    @OneToMany(mappedBy = "pedido", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<ItemPedido> itens;
 }

@@ -10,6 +10,7 @@ import org.mapstruct.Mapping;
 public interface CarrinhoMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "itens", ignore = true)
     Carrinho toEntity(CarrinhoRequestDTO dto);
 
     CarrinhoResponseDTO toDTO(Carrinho carrinho);

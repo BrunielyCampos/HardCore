@@ -16,6 +16,7 @@ public interface PedidoMapper {
     @Mapping(target = "abacatePayCheckoutId", ignore = true)
     @Mapping(target = "estadoPagamento", ignore = true)
     @Mapping(target = "urlPagamento", ignore = true)
+    @Mapping(target = "itens", ignore = true)
     Pedido toEntity(PedidoRequestDTO dto);
 
     PedidoResponseDTO toDTO(Pedido pedido);
