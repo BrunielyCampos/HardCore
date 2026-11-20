@@ -1,0 +1,2 @@
+ALTER TABLE tb_pedido
+ADD COLUMN estoque_baixado BOOLEAN NOT NULL DEFAULT FALSE;

@@ -1,0 +1,40 @@
+package com.ifrn.hardcore.produto.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class ConfigExceptionHandler {
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(EstoqueNaoEncontradoException.class)
+    public String hadel(EstoqueNaoEncontradoException ex){
+        return ex.getMessage();
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(ProdutoNaoEncontradoException.class)
+    public String hadel(ProdutoNaoEncontradoException ex){
+        return ex.getMessage();
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(AvaliacaoNaoEncontradaException.class)
+    public String hadel(AvaliacaoNaoEncontradaException ex){
+        return ex.getMessage();
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(PrateleiraNaoEncontradaException.class)
+    public  String hadel(PrateleiraNaoEncontradaException ex){
+        return ex.getMessage();
+    }
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(IllegalArgumentException.class)
+    public String handleIllegalArgument(IllegalArgumentException ex) {
+        return ex.getMessage();
+    }
+
+}
