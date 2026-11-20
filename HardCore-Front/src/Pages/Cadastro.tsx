@@ -1,30 +1,30 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../Context/AuthContext";
 import caveira from "../assets/CatalogoAsset/image 13.png";
 import hardocre3 from "../assets/CatalogoAsset/Hardocre 3.png";
 import hardocre4 from "../assets/CatalogoAsset/Hardocre 4.png";
-import chevronDown from "../assets/CatalogoAsset/chevron-down.svg";
 import vector3 from "../assets/CatalogoAsset/Vector 3.svg";
 import "./Cadastro.css";
 
 interface FormDataState {
-  name: string;
-  surname: string;
-  password: string;
+  nome: string;
   email: string;
-  cpf: string;
-  rg: string;
-  accountType: string;
+  senha: string;
+  endereco: string;
+  pix: string;
+  contaBancaria: string;
   marketing: boolean;
   terms: boolean;
 }
 
 const inputFields = [
-  { id: "name", label: "Nome", type: "text", animClass: "anim-nome" },
-  { id: "surname", label: "Sobrenome", type: "text", animClass: "anim-sobrenome" },
-  { id: "password", label: "Senha", type: "password", animClass: "anim-senha" },
+  { id: "nome", label: "Nome completo", type: "text", animClass: "anim-nome" },
   { id: "email", label: "E-mail", type: "email", animClass: "anim-email" },
-  { id: "cpf", label: "CPF", type: "text", animClass: "anim-cpf" },
-  { id: "rg", label: "RG", type: "text", animClass: "anim-rg" },
+  { id: "senha", label: "Senha (mín. 6)", type: "password", animClass: "anim-senha" },
+  { id: "endereco", label: "Endereço", type: "text", animClass: "anim-sobrenome" },
+  { id: "pix", label: "Chave Pix", type: "text", animClass: "anim-cpf" },
+  { id: "contaBancaria", label: "Conta Bancária", type: "text", animClass: "anim-rg" },
 ];
 
 interface CheckboxProps {
@@ -123,19 +123,23 @@ function AnimatedInput({ id, label, type = "text", value, onChange, animClass }:
 }
 
 export function Cadastro() {
+  const { cadastrar } = useAuth();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState<FormDataState>({
-    name: "",
-    surname: "",
-    password: "",
+    nome: "",
     email: "",
-    cpf: "",
-    rg: "",
-    accountType: "Pessoa Física",
+    senha: "",
+    endereco: "",
+    pix: "",
+    contaBancaria: "",
     marketing: false,
     terms: false,
   });
+  const [erro, setErro] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(false);
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFormData((current) => ({
       ...current,
@@ -150,39 +154,58 @@ export function Cadastro() {
     }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setErro(null);
+
     if (!formData.terms) {
-      alert("Você precisa aceitar os termos de uso para continuar.");
+      setErro("Você precisa aceitar os termos de uso para continuar.");
       return;
     }
-    console.log("Dados submetidos:", formData);
+
+    if (formData.senha.length < 6) {
+      setErro("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+
+    setCarregando(true);
+    try {
+      await cadastrar({
+        nome: formData.nome,
+        email: formData.email,
+        senha: formData.senha,
+        endereco: formData.endereco,
+        pix: formData.pix,
+        contaBancaria: formData.contaBancaria,
+      });
+      navigate("/login");
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : "Erro ao criar conta.");
+    } finally {
+      setCarregando(false);
+    }
   };
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center overflow-x-hidden bg-[#121214]">
       <main className="relative h-[1238px] w-[1479px] shrink-0 overflow-hidden bg-[#121214]">
-        
-        {/* Fundo e Grafismos Absolutos */}
         <img
           className="fixed left-0 -top-10 h-[1251px] w-[703px] object-cover"
-          style={{ left: '-120px' }}
+          style={{ left: "-120px" }}
           alt=""
           src={caveira}
         />
-       <img
+        <img
           className="fixed left-[380.93px] -bottom-[50px] h-[204.22px] w-[213.84px] object-contain z-0"
           alt=""
           aria-hidden="true"
           src={vector3}
         />
 
-        {/* Formulário com Flexbox e Grid */}
         <form
           className="absolute left-[338px] top-[156px] flex h-[939px] w-[804px] flex-col items-center rounded-[9.54px] border-[0.87px] border-solid border-[#4F4F4F] bg-[linear-gradient(0deg,#740303_4%,#980808_17%,#111111_48%,#000000_100%)] pt-[53px]"
           onSubmit={handleSubmit}
         >
-          {/* Títulos */}
           <div className="z-10 flex flex-col items-center">
             <h1 className="m-0 font-['Metal_Mania',cursive] text-[46.35px] font-normal leading-none text-white">
               Criar minha conta
@@ -192,7 +215,6 @@ export function Cadastro() {
             </p>
           </div>
 
-          {/* Grelha de Inputs Dinâmica com Animação */}
           <div className="z-10 mt-[70px] grid grid-cols-2 gap-x-[9px] gap-y-[26px]">
             {inputFields.map((field) => (
               <AnimatedInput
@@ -207,31 +229,6 @@ export function Cadastro() {
             ))}
           </div>
 
-          {/* Dropdown Tipo de Conta Nativo Otimizado */}
-          <div className="z-10 mt-[26px] flex h-[61.26px] w-[372px] flex-col justify-center rounded-[13.61px_3.19px_15.04px_4.47px] border-[0.64px] border-solid border-[#AAAAAA] bg-[linear-gradient(117deg,#2F2F2F_0%,#959595_100%)] px-[8.30px] py-[7.66px] relative">
-            <label
-              htmlFor="accountType"
-              className="font-['Inter',sans-serif] text-[8.30px] italic text-[#CCCCCC]"
-            >
-              Quero me cadastrar como: *
-            </label>
-            <div className="relative mt-[2px] flex w-full items-center">
-              <select
-                id="accountType"
-                name="accountType"
-                value={formData.accountType}
-                onChange={handleChange}
-                required
-                className="w-full bg-transparent font-['Inter',sans-serif] text-[17.87px] font-semibold italic text-white focus:outline-none cursor-pointer appearance-none"
-              >
-                <option value="Pessoa Física" className="bg-[#2F2F2F] text-white">Pessoa Física</option>
-                <option value="Pessoa Jurídica" className="bg-[#2F2F2F] text-white">Pessoa Jurídica</option>
-              </select>
-              <img src={chevronDown} className="pointer-events-none absolute right-2 z-10 h-[12.76px] w-[12.76px] object-contain" alt="" />
-            </div>
-          </div>
-
-          {/* Checkboxes e Termos */}
           <div className="z-10 mt-[40px] flex w-[730px] flex-col gap-[33px] pl-[5px]">
             <label className="flex cursor-pointer items-center gap-[9px] font-['Metal_Mania',cursive] text-[18px] leading-relaxed text-white transition-colors duration-200 hover:text-[#FF7777]">
               <Checkbox id="marketing" checked={formData.marketing} onChange={handleCheckboxChange} />
@@ -266,21 +263,27 @@ export function Cadastro() {
             </label>
           </div>
 
-  
+          {erro && (
+            <p className="z-10 mt-4 font-['Inter',sans-serif] text-base font-semibold text-[#FF7777]">
+              {erro}
+            </p>
+          )}
+
           <button
             type="submit"
-            className="btn-rectangle-anim relative z-10 mt-[45px] flex h-[102px] w-[492px] cursor-pointer items-center justify-center rounded-[10px] border-none shadow-md transition-transform duration-200 active:scale-95"
+            disabled={carregando}
+            className="btn-rectangle-anim relative z-10 mt-[45px] flex h-[102px] w-[492px] cursor-pointer items-center justify-center rounded-[10px] border-none shadow-md transition-transform duration-200 active:scale-95 disabled:opacity-60"
           >
             <span
               style={{
-                fontFamily: 'Inter',
-                fontSize: '35.16px',
-                fontWeight: '700',
-                wordWrap: 'break-word',
+                fontFamily: "Inter",
+                fontSize: "35.16px",
+                fontWeight: "700",
+                wordWrap: "break-word",
               }}
               className="relative z-20 text-white"
             >
-              Criar Conta
+              {carregando ? "Criando..." : "Criar Conta"}
             </span>
           </button>
         </form>

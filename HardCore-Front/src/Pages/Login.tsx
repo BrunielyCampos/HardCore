@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../Context/AuthContext";
 import "./Login.css";
 
 import bgImage from "../assets/LoginAsset/image 11.png";
@@ -24,7 +25,6 @@ function AnimatedInput({ id, label, type = "text", value, onChange, animClass, i
 
   return (
     <div className="relative flex h-[60px] w-[366px] items-center rounded-[13px_3px_15px_4px] border-[0.6px] border-solid border-[#AAAAAA] bg-[linear-gradient(117deg,#2F2F2F_0%,#959595_100%)] px-[12px] gap-[12px]">
-      
       <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center overflow-hidden">
         <img src={icon} alt={`${label} icon`} className="h-[29px] w-[22px] object-contain" />
       </div>
@@ -55,10 +55,15 @@ function AnimatedInput({ id, label, type = "text", value, onChange, animClass, i
 }
 
 export default function Login() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
-    login: "",
+    email: "",
     senha: "",
   });
+  const [erro, setErro] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(false);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -68,15 +73,24 @@ export default function Login() {
     }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log("Dados de Login:", formData);
+    setErro(null);
+    setCarregando(true);
+
+    try {
+      await login(formData.email, formData.senha);
+      navigate("/");
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : "Erro ao fazer login.");
+    } finally {
+      setCarregando(false);
+    }
   };
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center overflow-x-hidden bg-black">
       <main className="relative h-[1080px] w-[1479px] shrink-0 overflow-hidden bg-black">
-        
         <img
           className="fixed right-[-100px] -top-45 h-[1262px] w-[1262px] object-cover"
           alt="Background"
@@ -93,10 +107,10 @@ export default function Login() {
 
           <div className="z-10 mt-[52px] flex flex-col gap-[22px]">
             <AnimatedInput
-              id="login"
-              label="Login"
-              type="text"
-              value={formData.login}
+              id="email"
+              label="E-mail"
+              type="email"
+              value={formData.email}
               onChange={handleChange}
               animClass="anim-login-field"
               icon={userIcon}
@@ -112,12 +126,19 @@ export default function Login() {
             />
           </div>
 
+          {erro && (
+            <p className="z-10 mt-3 px-6 text-center font-['Inter',sans-serif] text-sm font-semibold text-[#FF7777]">
+              {erro}
+            </p>
+          )}
+
           <button
             type="submit"
-            className="btn-rectangle-anim relative z-10 mt-[48px] flex h-[61px] w-[294px] cursor-pointer items-center justify-center rounded-[6px] border-none shadow-md transition-transform duration-200 active:scale-95"
+            disabled={carregando}
+            className="btn-rectangle-anim relative z-10 mt-[32px] flex h-[61px] w-[294px] cursor-pointer items-center justify-center rounded-[6px] border-none shadow-md transition-transform duration-200 active:scale-95 disabled:opacity-60"
           >
             <span className="font-['Inter',sans-serif] text-[21px] font-bold text-white">
-              Fazer Login
+              {carregando ? "Entrando..." : "Fazer Login"}
             </span>
           </button>
 
@@ -126,12 +147,12 @@ export default function Login() {
               Ainda não tem uma conta
             </span>
             <span className="font-['Metal_Mania',cursive] text-[19px] text-white">?</span>
-            <Link 
-              to="/cadastro" 
+            <Link
+              to="/cadastro"
               className="group flex items-center gap-[4px] font-['Metal_Mania',cursive] text-[16px] text-white transition-colors hover:text-[#FF7777]"
             >
               Criar agora
-              <span className="mt-[2px] transition-transform group-hover:translate-x-1">&gt;</span>
+              <span className="mt-[2px] transition-transform group-hover:translate-x-1"></span>
             </Link>
           </div>
         </form>
@@ -141,7 +162,6 @@ export default function Login() {
           alt="Playstation D-Pad"
           src={dpadImage}
         />
-
       </main>
     </div>
   );
