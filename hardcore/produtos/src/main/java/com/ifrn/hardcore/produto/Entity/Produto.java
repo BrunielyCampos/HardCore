@@ -1,0 +1,49 @@
+package com.ifrn.hardcore.produto.Entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.util.List;
+
+@Entity
+@Table(name = "tb_produto")
+@Data
+@NoArgsConstructor
+public class Produto {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank
+    private String nome;
+
+    @NotBlank
+    private String marca;
+
+    @NotBlank
+    private String categoria;
+
+    @NotNull
+    private Double preco;
+
+    @OneToOne(mappedBy = "produto")
+    private Estoque estoque;
+
+    @OneToOne(mappedBy = "produto")
+    private Prateleira prateleira;
+
+    @OneToMany(mappedBy = "produto")
+    private List<AvaliacaoCliente> avaliacoes;
+
+    public Produto(Long id, String nome, String marca, String categoria, @NotNull Double preco, Prateleira prateleira) {
+        this.id = id;
+        this.nome = nome;
+        this.marca = marca;
+        this.categoria = categoria;
+        this.preco = preco;
+        this.prateleira = prateleira;
+    }
+}
