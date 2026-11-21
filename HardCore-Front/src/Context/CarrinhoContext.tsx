@@ -1,4 +1,4 @@
-import { createContext, useState, useContext } from 'react';
+import { createContext, useState, useContext, useCallback, useMemo } from 'react';
 import type { ReactNode } from 'react';
 
 // Define como é o produto dentro do carrinho
@@ -32,24 +32,30 @@ const converterPreco = (precoStr: string) => {
 export function CarrinhoProvider({ children }: { children: ReactNode }) {
   const [itens, setItens] = useState<ProdutoCarrinho[]>([]);
 
-  const adicionarAoCarrinho = (produto: Omit<ProdutoCarrinho, 'quantidade' | 'precoNumero'>) => {
-    setItens((prev) => {
-      const itemExistente = prev.find((item) => item.id === produto.id);
-      
-      if (itemExistente) {
-        // Se já tem no carrinho, soma +1 na quantidade
-        return prev.map((item) =>
-          item.id === produto.id ? { ...item, quantidade: item.quantidade + 1 } : item
-        );
-      }
-      
-      // Se não tem, adiciona com quantidade 1 e preço numérico calculado
-      return [...prev, { ...produto, quantidade: 1, precoNumero: converterPreco(produto.precoString) }];
-    });
-  };
+  const adicionarAoCarrinho = useCallback(
+    (produto: Omit<ProdutoCarrinho, 'quantidade' | 'precoNumero'>) => {
+      setItens((prev) => {
+        const itemExistente = prev.find((item) => item.id === produto.id);
 
-  const alterarQuantidade = (id: string | number, delta: number) => {
-    setItens((prev) => 
+        if (itemExistente) {
+          // Se já tem no carrinho, soma +1 na quantidade
+          return prev.map((item) =>
+            item.id === produto.id ? { ...item, quantidade: item.quantidade + 1 } : item
+          );
+        }
+
+        // Se não tem, adiciona com quantidade 1 e preço numérico calculado
+        return [
+          ...prev,
+          { ...produto, quantidade: 1, precoNumero: converterPreco(produto.precoString) },
+        ];
+      });
+    },
+    []
+  );
+
+  const alterarQuantidade = useCallback((id: string | number, delta: number) => {
+    setItens((prev) =>
       prev.map((item) => {
         if (item.id === id) {
           const novaQuantidade = Math.max(1, item.quantidade + delta); // Nunca deixa ser menor que 1
@@ -58,35 +64,49 @@ export function CarrinhoProvider({ children }: { children: ReactNode }) {
         return item;
       })
     );
-  };
+  }, []);
 
-  const removerDoCarrinho = (id: string | number) => {
+  const removerDoCarrinho = useCallback((id: string | number) => {
     setItens((prev) => prev.filter((item) => item.id !== id));
-  };
+  }, []);
 
-  const limparCarrinho = () => {
+  const limparCarrinho = useCallback(() => {
     setItens([]);
-  };
+  }, []);
 
   // Cálculos automáticos para os cabeçalhos e resumo
-  const quantidadeCarrinho = itens.reduce((acc, item) => acc + item.quantidade, 0);
-  const valorTotal = itens.reduce((acc, item) => acc + (item.precoNumero * item.quantidade), 0);
-
-  return (
-    <CarrinhoContext.Provider 
-      value={{ 
-        itens, 
-        quantidadeCarrinho, 
-        valorTotal, 
-        adicionarAoCarrinho, 
-        alterarQuantidade, 
-        removerDoCarrinho,
-        limparCarrinho
-      }}
-    >
-      {children}
-    </CarrinhoContext.Provider>
+  const quantidadeCarrinho = useMemo(
+    () => itens.reduce((acc, item) => acc + item.quantidade, 0),
+    [itens]
   );
+
+  const valorTotal = useMemo(
+    () => itens.reduce((acc, item) => acc + item.precoNumero * item.quantidade, 0),
+    [itens]
+  );
+
+  const value = useMemo(
+    () => ({
+      itens,
+      quantidadeCarrinho,
+      valorTotal,
+      adicionarAoCarrinho,
+      alterarQuantidade,
+      removerDoCarrinho,
+      limparCarrinho,
+    }),
+    [
+      itens,
+      quantidadeCarrinho,
+      valorTotal,
+      adicionarAoCarrinho,
+      alterarQuantidade,
+      removerDoCarrinho,
+      limparCarrinho,
+    ]
+  );
+
+  return <CarrinhoContext.Provider value={value}>{children}</CarrinhoContext.Provider>;
 }
 
 export function useCarrinho() {

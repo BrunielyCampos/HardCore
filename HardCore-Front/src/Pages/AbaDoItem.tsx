@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import HeaderSimples from '../Componentes/HeaderSimples/HeaderSimples';
 import Footer from '../Componentes/Footer/FooterPagamento';
 import { useCarrinho } from '../Context/CarrinhoContext';
 import { useProdutos } from '../Context/ProdutoContext';
+import { useAuth } from '../Context/AuthContext';
 
 import bannerAnuncio from '../assets/HomeAsset/RodapeAnuncio.png';
 
@@ -16,9 +17,11 @@ const StarIcon = () => (
 export default function AbaDoItem() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isComprando, setIsComprando] = useState(false);
   const { adicionarAoCarrinho } = useCarrinho();
   const { produtos, carregando } = useProdutos();
+  const { isAuthenticated, usuario } = useAuth();
 
   const produto = produtos.find((p) => p.id === id);
 
@@ -59,6 +62,11 @@ export default function AbaDoItem() {
     : [`Marca: ${produto.marca || 'HardCore'}`, `Categoria: ${produto.categoria}`, `SKU: ${produto.sku}`];
 
   const handleComprarAgora = () => {
+    if (!isAuthenticated || !usuario) {
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
+
     adicionarAoCarrinho({
       id: produto.id,
       nome: produto.nome,
