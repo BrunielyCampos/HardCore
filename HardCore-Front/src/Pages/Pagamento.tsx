@@ -1,20 +1,34 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeCanvas } from 'qrcode.react';
 import HeaderSimples from '../Componentes/HeaderSimples/HeaderSimples';
 import Footer from '../Componentes/Footer/FooterPagamento';
 import { useCarrinho, type ProdutoCarrinho } from '../Context/CarrinhoContext';
 import { usePedidos, type Pedido } from '../Context/PedidoContext';
+import { useAuth } from '../Context/AuthContext';
 
 import iconIdentificacao from '../assets/InformacoesAsset/Identificacao.svg';
 import iconPagamento from '../assets/InformacoesAsset/Pagamento.svg';
 import iconConfirmacao from '../assets/InformacoesAsset/Confirmacao.svg';
 
-const STATUS_PAGO = ['PAGO', 'PAID', 'APPROVED', 'APROVADO', 'COMPLETED', 'CONCLUIDO', 'CONFIRMED'];
+const STATUS_PAGO = [
+  'PAGO',
+  'PAID',
+  'APPROVED',
+  'APROVADO',
+  'COMPLETED',
+  'CONCLUIDO',
+  'CONCLUÍDO',
+  'CONFIRMED',
+  'SETTLED',
+];
 
-function pagamentoConfirmado(estadoPagamento?: string): boolean {
-  if (!estadoPagamento) return false;
-  return STATUS_PAGO.includes(estadoPagamento.trim().toUpperCase());
+function pagamentoConfirmado(estadoPagamento?: string, estadoPedido?: string): boolean {
+  const valores = [estadoPagamento, estadoPedido]
+    .filter((v): v is string => Boolean(v && v.trim()))
+    .map((v) => v.trim().toUpperCase());
+
+  return valores.some((valor) => STATUS_PAGO.includes(valor));
 }
 
 function assinaturaCarrinho(itens: ProdutoCarrinho[], valorTotal: number): string {
@@ -29,20 +43,49 @@ export default function Pagamento() {
   const navigate = useNavigate();
   const { itens, valorTotal } = useCarrinho();
   const { criarPedido, pedidoAtivo, setPedidoAtivo, buscarPedidoBackend } = usePedidos();
+  const { token } = useAuth();
 
   const [carregando, setCarregando] = useState(true);
+  const [verificandoAgora, setVerificandoAgora] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
 
   const iniciouGeracaoRef = useRef(false);
   const redirecionouRef = useRef(false);
 
-  const avancarParaConfirmacao = (idPedido: string) => {
-    if (redirecionouRef.current) return;
-    redirecionouRef.current = true;
-    setPedidoAtivo(null);
-    navigate(`/confirmacao/${idPedido}`);
-  };
+  const avancarParaConfirmacao = useCallback(
+    (idPedido: string) => {
+      if (redirecionouRef.current) return;
+      redirecionouRef.current = true;
+      setPedidoAtivo(null);
+      navigate(`/confirmacao/${idPedido}`, { replace: true });
+    },
+    [navigate, setPedidoAtivo]
+  );
+
+  const consultarStatusDireto = useCallback(
+    async (idPedido: string): Promise<boolean> => {
+      try {
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch(`/api/pedidos/pedidos/${idPedido}`, { headers });
+        if (!res.ok) return false;
+
+        const dto = await res.json();
+        await buscarPedidoBackend(idPedido);
+
+        if (pagamentoConfirmado(dto?.estadoPagamento, dto?.estado)) {
+          avancarParaConfirmacao(String(dto?.id ?? idPedido));
+          return true;
+        }
+        return false;
+      } catch {
+        return false;
+      }
+    },
+    [token, buscarPedidoBackend, avancarParaConfirmacao]
+  );
 
   const pedidoCorrespondeAoCarrinhoAtual = (pedido: Pedido | null): boolean => {
     if (!pedido || !pedido.urlPagamento) return false;
@@ -52,7 +95,7 @@ export default function Pagamento() {
   };
 
   const gerarPixAutomatico = async (forcarNovo = false) => {
-    if (!forcarNovo && pedidoAtivo && pagamentoConfirmado(pedidoAtivo.estadoPagamento)) {
+    if (!forcarNovo && pedidoAtivo && pagamentoConfirmado(pedidoAtivo.estadoPagamento, pedidoAtivo.status)) {
       avancarParaConfirmacao(pedidoAtivo.id);
       return;
     }
@@ -72,7 +115,7 @@ export default function Pagamento() {
     setErro(null);
     try {
       const novo = await criarPedido(itens, valorTotal);
-      if (pagamentoConfirmado(novo.estadoPagamento)) {
+      if (pagamentoConfirmado(novo.estadoPagamento, novo.status)) {
         avancarParaConfirmacao(novo.id);
       }
     } catch (err) {
@@ -90,21 +133,34 @@ export default function Pagamento() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const idPedidoAtual = pedidoAtivo?.id;
+
   // Verifica periodicamente no back-end se o pagamento já foi confirmado
   useEffect(() => {
-    if (!pedidoAtivo?.id || carregando || erro) return;
+    if (!idPedidoAtual || carregando || erro || redirecionouRef.current) return;
 
-    const intervalo = setInterval(async () => {
-      const atualizado = await buscarPedidoBackend(pedidoAtivo.id);
-      if (atualizado && pagamentoConfirmado(atualizado.estadoPagamento)) {
-        clearInterval(intervalo);
-        avancarParaConfirmacao(atualizado.id);
-      }
-    }, 3000);
+    let ativo = true;
 
-    return () => clearInterval(intervalo);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pedidoAtivo?.id, carregando, erro, buscarPedidoBackend]);
+    const checar = async () => {
+      if (!ativo || redirecionouRef.current) return;
+      await consultarStatusDireto(idPedidoAtual);
+    };
+
+    checar();
+    const intervalo = setInterval(checar, 2500);
+
+    return () => {
+      ativo = false;
+      clearInterval(intervalo);
+    };
+  }, [idPedidoAtual, carregando, erro, consultarStatusDireto]);
+
+  const handleVerificarAgora = async () => {
+    if (!idPedidoAtual || verificandoAgora) return;
+    setVerificandoAgora(true);
+    await consultarStatusDireto(idPedidoAtual);
+    setVerificandoAgora(false);
+  };
 
   const handleCopiarLink = () => {
     if (!pedidoAtivo?.urlPagamento) return;
@@ -216,9 +272,19 @@ export default function Pagamento() {
                   </button>
                 </div>
 
-                <p className="text-white/60 text-xs text-center">
-                  Aguardando confirmação do pagamento PIX...
-                </p>
+                <div className="flex flex-col items-center gap-2">
+                  <p className="text-white/60 text-xs text-center">
+                    Aguardando confirmação do pagamento PIX...
+                  </p>
+                  <button
+                    type="button"
+                    disabled={verificandoAgora}
+                    onClick={handleVerificarAgora}
+                    className="px-4 py-1.5 rounded border border-white/25 bg-black/40 text-white/85 text-xs font-semibold hover:border-[#FF0000] hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {verificandoAgora ? 'Verificando...' : 'Verificar pagamento agora'}
+                  </button>
+                </div>
               </div>
             )}
           </div>

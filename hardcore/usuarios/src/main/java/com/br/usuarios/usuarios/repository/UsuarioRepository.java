@@ -8,7 +8,7 @@ import com.br.usuarios.usuarios.model.Usuario;
 import com.br.usuarios.usuarios.model.UsuarioEnum;
 
 @Repository
-public interface UsuarioRepository extends JpaRepository <Usuario, Long>{
+public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByEmail(String email);
     Optional<Usuario> findById(Long id);
     List<Usuario> findByPerfil(UsuarioEnum perfil);

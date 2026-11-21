@@ -13,6 +13,7 @@ export interface Pedido {
   estadoPagamento?: string;
   urlPagamento?: string;
   abacatePayCheckoutId?: string;
+  enderecoDestino?: string;
   motorista?: string;
   veiculo?: string;
   dataCriacao: Date;
@@ -42,6 +43,8 @@ interface PedidoContextData {
 }
 
 const STORAGE_KEY = '@hardcore:pedido_ativo';
+const PEDIDOS_LISTA_KEY = '@hardcore:pedidos_lista';
+const ENDERECO_CHECKOUT_KEY = '@hardcore:endereco_checkout';
 
 function mapearEstadoParaStatus(estado?: string): StatusEntrega {
   switch (estado) {
@@ -60,7 +63,20 @@ const PedidoContext = createContext<PedidoContextData>({} as PedidoContextData);
 
 export function PedidoProvider({ children }: { children: ReactNode }) {
   const { token, usuario } = useAuth();
-  const [pedidos, setPedidos] = useState<Pedido[]>([]);
+
+  const [pedidos, setPedidos] = useState<Pedido[]>(() => {
+    try {
+      const salvos = localStorage.getItem(PEDIDOS_LISTA_KEY);
+      if (!salvos) return [];
+      return JSON.parse(salvos).map((p: any) => ({
+        ...p,
+        dataCriacao: p.dataCriacao ? new Date(p.dataCriacao) : new Date(),
+      }));
+    } catch {
+      return [];
+    }
+  });
+
   const [pedidoAtivo, setPedidoAtivoState] = useState<Pedido | null>(() => {
     try {
       const salvo = sessionStorage.getItem(STORAGE_KEY);
@@ -74,6 +90,32 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
       return null;
     }
   });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(PEDIDOS_LISTA_KEY, JSON.stringify(pedidos));
+    } catch {
+      // ignora erro de storage
+    }
+  }, [pedidos]);
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === PEDIDOS_LISTA_KEY && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue).map((p: any) => ({
+            ...p,
+            dataCriacao: p.dataCriacao ? new Date(p.dataCriacao) : new Date(),
+          }));
+          setPedidos(parsed);
+        } catch {
+          // ignora erro de parse
+        }
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   const setPedidoAtivo = useCallback((pedido: Pedido | null) => {
     setPedidoAtivoState(pedido);
@@ -156,6 +198,7 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
     }
 
     const dadosFinais: PedidoBackendDTO = await resCheckout.json();
+    const enderecoSalvo = localStorage.getItem(ENDERECO_CHECKOUT_KEY) || undefined;
 
     const novoPedido: Pedido = {
       id: String(dadosFinais.id),
@@ -165,6 +208,7 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
       estadoPagamento: dadosFinais.estadoPagamento,
       urlPagamento: dadosFinais.urlPagamento,
       abacatePayCheckoutId: dadosFinais.abacatePayCheckoutId,
+      enderecoDestino: enderecoSalvo,
       dataCriacao: dadosFinais.dataCompra ? new Date(dadosFinais.dataCompra) : new Date(),
     };
 
@@ -185,7 +229,10 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
         let atualizado: Pedido | null = null;
 
         setPedidos((prev) => {
-          const existente = prev.find((p) => p.id === String(dto.id)) || pedidoAtivo;
+          const existente =
+            prev.find((p) => p.id === String(dto.id)) ||
+            prev.find((p) => p.id === id);
+
           atualizado = {
             id: String(dto.id),
             itens: existente?.itens || [],
@@ -194,10 +241,15 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
             estadoPagamento: dto.estadoPagamento,
             urlPagamento: dto.urlPagamento,
             abacatePayCheckoutId: dto.abacatePayCheckoutId,
+            enderecoDestino:
+              existente?.enderecoDestino ||
+              localStorage.getItem(ENDERECO_CHECKOUT_KEY) ||
+              undefined,
             motorista: existente?.motorista,
             veiculo: existente?.veiculo,
             dataCriacao: dto.dataCompra ? new Date(dto.dataCompra) : new Date(),
           };
+
           return [atualizado, ...prev.filter((p) => p.id !== atualizado!.id)];
         });
 
@@ -207,7 +259,7 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
         return null;
       }
     },
-    [authHeaders, pedidoAtivo]
+    [authHeaders]
   );
 
   const atualizarEntrega = (id: string, motorista: string, veiculo: string, status: StatusEntrega) => {

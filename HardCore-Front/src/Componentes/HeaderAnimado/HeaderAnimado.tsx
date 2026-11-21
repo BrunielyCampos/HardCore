@@ -38,6 +38,9 @@ export default function HeaderAnimado() {
     usuario?.perfil === 'ROLE_GERENTE' ||
     usuario?.perfil === 'GERENTE' ||
     usuario?.perfil === 'ROLE_ADMIN';
+  const isEntregador =
+    usuario?.perfil === 'ROLE_ENTREGADOR' ||
+    usuario?.perfil === 'ENTREGADOR';
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -53,10 +56,10 @@ export default function HeaderAnimado() {
         <div className={`absolute inset-0 transition-opacity duration-1000 ${variant === 1 ? 'opacity-100' : 'opacity-0'}`} style={{ background: gradients[1] }} />
         <div className={`absolute inset-0 transition-opacity duration-1000 ${variant === 2 ? 'opacity-100' : 'opacity-0'}`} style={{ background: gradients[2] }} />
         <div className={`absolute inset-0 transition-opacity duration-1000 ${variant === 3 ? 'opacity-100' : 'opacity-0'}`} style={{ background: gradients[3] }} />
-        
+
         {/* Link com tamanho fixo atuando como contêiner absoluto */}
-        <Link 
-          to="/home" 
+        <Link
+          to="/home"
           className="absolute left-0 top-0 w-[250px] h-[140px] block cursor-pointer pointer-events-auto z-30 transition-transform hover:scale-105"
         >
           <img src={manchaPreta} alt="" className="absolute w-[250px] h-[222px] left-[220px] top-[70px] -translate-x-1/2 -translate-y-1/2 object-contain" />
@@ -66,7 +69,6 @@ export default function HeaderAnimado() {
 
       {/* Container Central Flexível */}
       <div className="relative z-20 flex flex-col justify-center items-center gap-[15px] w-full max-w-[1000px] ml-[150px]">
-        
         {/* Linha 1: Input e Acessos */}
         <div className="flex items-center justify-center gap-[30px] w-full">
           <div className="flex items-center gap-[10px]">
@@ -94,6 +96,11 @@ export default function HeaderAnimado() {
                       Gerente
                     </span>
                   )}
+                  {isEntregador && (
+                    <span className="rounded-[4px] bg-[#FF6B00] px-1.5 py-[2px] font-['Inter'] text-[9px] font-bold uppercase tracking-wider text-white shadow-[0_0_8px_rgba(255,107,0,0.5)]">
+                      Entregador
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -104,6 +111,28 @@ export default function HeaderAnimado() {
                         className="font-['Inter'] text-[12px] font-semibold text-[#FF7070] hover:text-white transition-colors cursor-pointer pointer-events-auto"
                       >
                         Painel
+                      </Link>
+                      <span className="text-white/30 text-[10px]">•</span>
+                    </>
+                  )}
+                  {isEntregador && (
+                    <>
+                      <Link
+                        to="/entregador"
+                        className="font-['Inter'] text-[12px] font-semibold text-[#FFB26B] hover:text-white transition-colors cursor-pointer pointer-events-auto"
+                      >
+                        Entregas
+                      </Link>
+                      <span className="text-white/30 text-[10px]">•</span>
+                    </>
+                  )}
+                  {!isGerente && !isEntregador && (
+                    <>
+                      <Link
+                        to="/meus-pedidos"
+                        className="font-['Inter'] text-[12px] font-semibold text-[#FFB26B] hover:text-white transition-colors cursor-pointer pointer-events-auto"
+                      >
+                        Meus Pedidos
                       </Link>
                       <span className="text-white/30 text-[10px]">•</span>
                     </>
@@ -139,7 +168,7 @@ export default function HeaderAnimado() {
                 <img src={iconCart} alt="Carrinho" className="h-full w-full object-contain" />
               </div>
             )}
-            
+
             <div className="absolute top-0 right-0 flex h-[20px] w-[20px] items-center justify-center rounded-full shadow-md bg-gradient-to-b from-[#FEFEFE] to-black pointer-events-none">
               <span className="font-['Iosevka_Charon'] text-[12px] font-normal text-[#00174F] pt-[2px]">
                 {quantidadeCarrinho}
@@ -156,8 +185,16 @@ export default function HeaderAnimado() {
           </div>
           <CuponsButton label="Cupons" iconWhite={iconCupomWhite} iconBlack={iconCupomBlack} />
           <MaisVendidoButton label="Mais vendidos" iconWhite={iconVendidosWhite} iconBlack={iconVendidosBlack} />
+
+          {isEntregador && (
+            <Link
+              to="/entregador"
+              className="flex h-[38px] items-center gap-2 rounded-tl-[12px] rounded-br-[12px] border border-[#FF6B00] bg-black/70 px-5 font-['Inter'] text-[14px] font-semibold text-[#FFB26B] transition-all hover:bg-[#FF6B00] hover:text-white cursor-pointer pointer-events-auto"
+            >
+              <span>Entregas</span>
+            </Link>
+          )}
         </div>
-        
       </div>
     </header>
   );

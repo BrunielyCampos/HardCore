@@ -12,10 +12,14 @@ import GerenciarProdutos from './Pages/GerenciarProdutos';
 import CadastrarProduto from './Pages/CadastrarProduto';
 import PrecosEstoque from './Pages/PrecosEstoque';
 import GerenciarPedidos from './Pages/GerenciarPedidos';
+import PainelEntregador from './Pages/PainelEntregador';
+import GerenciarEntregas from './Pages/GerenciarEntregas';
+import MeusPedidos from './Pages/MeusPedidos';
 import { AuthProvider } from './Context/AuthContext';
 import { CarrinhoProvider } from './Context/CarrinhoContext';
 import { ProdutoProvider } from './Context/ProdutoContext';
 import { PedidoProvider } from './Context/PedidoContext';
+
 
 export default function App() {
   return (
@@ -40,6 +44,9 @@ export default function App() {
                 <Route path="/editar-produto/:id" element={<CadastrarProduto />} />
                 <Route path="/precos-estoque" element={<PrecosEstoque />} />
                 <Route path="/gerenciar-pedidos" element={<GerenciarPedidos />} />
+                <Route path="/gerenciar-entregas" element={<GerenciarEntregas />} />
+                <Route path="/entregador" element={<PainelEntregador />} />
+                <Route path="/meus-pedidos" element={<MeusPedidos />} />
               </Routes>
             </BrowserRouter>
           </CarrinhoProvider>

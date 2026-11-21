@@ -31,21 +31,23 @@ export default function HeaderSimples() {
     usuario?.perfil === 'ROLE_GERENTE' ||
     usuario?.perfil === 'GERENTE' ||
     usuario?.perfil === 'ROLE_ADMIN';
+  const isEntregador =
+    usuario?.perfil === 'ROLE_ENTREGADOR' ||
+    usuario?.perfil === 'ENTREGADOR';
 
   return (
     <header className="fixed top-0 left-0 w-full h-[140px] z-50 bg-white shrink-0 shadow-md flex justify-center items-center">
-      
       {/* Background e Logos */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {/* Fundo Estático Vermelho */}
-        <div 
+        <div
           className="absolute inset-0 w-full h-[140px]"
           style={{ background: 'linear-gradient(168deg, #131313 0%, #3D0000 28%, #200000 50%, #030000 92%)' }}
         />
 
         {/* Link com tamanho fixo atuando como contêiner absoluto */}
-        <Link 
-          to="/home" 
+        <Link
+          to="/home"
           className="absolute left-0 top-0 w-[250px] h-[140px] block cursor-pointer pointer-events-auto z-30 transition-transform hover:scale-105"
         >
           <img
@@ -53,9 +55,9 @@ export default function HeaderSimples() {
             alt=""
             className="absolute w-[250px] h-[222px] left-[220px] top-[70px] -translate-x-1/2 -translate-y-1/2 object-contain"
           />
-          <img 
-            src={logoHardcore} 
-            alt="Logo Hardcore" 
+          <img
+            src={logoHardcore}
+            alt="Logo Hardcore"
             className="absolute w-[190px] h-[132px] left-[110px] top-[5px] -rotate-1 origin-top-left"
           />
         </Link>
@@ -63,7 +65,6 @@ export default function HeaderSimples() {
 
       {/* Container Central Flexível */}
       <div className="relative z-20 flex flex-col justify-center items-center gap-[15px] w-full max-w-[1000px] ml-[150px]">
-        
         {/* Linha 1: Input e Acessos */}
         <div className="flex items-center justify-center gap-[30px] w-full">
           <div className="flex items-center gap-[10px]">
@@ -76,9 +77,9 @@ export default function HeaderSimples() {
 
           <div className="flex h-[40px] w-[380px] items-center gap-[14px] rounded-tl-[20px] rounded-br-[20px] rounded-bl-[5px] bg-white px-[15px] shadow-lg">
             <img src={iconSearch} alt="Buscar" className="h-[20px] w-[20px] object-contain opacity-70" />
-            <input 
-              type="text" 
-              placeholder="Buscar produtos" 
+            <input
+              type="text"
+              placeholder="Buscar produtos"
               className="w-full bg-transparent font-['Inter'] text-[16px] font-extralight italic text-black placeholder:text-black/40 focus:outline-none"
             />
           </div>
@@ -95,6 +96,11 @@ export default function HeaderSimples() {
                       Gerente
                     </span>
                   )}
+                  {isEntregador && (
+                    <span className="rounded-[4px] bg-[#FF6B00] px-1.5 py-[2px] font-['Inter'] text-[9px] font-bold uppercase tracking-wider text-white shadow-[0_0_8px_rgba(255,107,0,0.5)]">
+                      Entregador
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -105,6 +111,28 @@ export default function HeaderSimples() {
                         className="font-['Inter'] text-[12px] font-semibold text-[#FF7070] hover:text-white transition-colors cursor-pointer pointer-events-auto"
                       >
                         Painel
+                      </Link>
+                      <span className="text-white/30 text-[10px]">•</span>
+                    </>
+                  )}
+                  {isEntregador && (
+                    <>
+                      <Link
+                        to="/entregador"
+                        className="font-['Inter'] text-[12px] font-semibold text-[#FFB26B] hover:text-white transition-colors cursor-pointer pointer-events-auto"
+                      >
+                        Entregas
+                      </Link>
+                      <span className="text-white/30 text-[10px]">•</span>
+                    </>
+                  )}
+                  {!isGerente && !isEntregador && (
+                    <>
+                      <Link
+                        to="/meus-pedidos"
+                        className="font-['Inter'] text-[12px] font-semibold text-[#FFB26B] hover:text-white transition-colors cursor-pointer pointer-events-auto"
+                      >
+                        Meus Pedidos
                       </Link>
                       <span className="text-white/30 text-[10px]">•</span>
                     </>
@@ -140,7 +168,7 @@ export default function HeaderSimples() {
                 <img src={iconCart} alt="Carrinho" className="h-full w-full object-contain" />
               </div>
             )}
-            
+
             <div className="absolute top-0 right-0 flex h-[20px] w-[20px] items-center justify-center rounded-full shadow-md bg-gradient-to-b from-[#FEFEFE] to-black pointer-events-none">
               <span className="font-['Iosevka_Charon'] text-[12px] font-normal text-[#00174F] pt-[2px]">
                 {quantidadeCarrinho}
@@ -152,27 +180,36 @@ export default function HeaderSimples() {
         {/* Linha 2: Botões */}
         <div className="flex items-center justify-center gap-[20px] w-full mr-[120px]">
           <div className="relative">
-            <DepartamentoButton 
-              label="Departamento" 
-              iconWhite={iconDeptWhite} 
+            <DepartamentoButton
+              label="Departamento"
+              iconWhite={iconDeptWhite}
               iconBlack={iconDeptBlack}
-              isOpen={isDepartamentoOpen} 
+              isOpen={isDepartamentoOpen}
               onClick={() => setIsDepartamentoOpen(!isDepartamentoOpen)}
             />
             <DepartamentoDropdown isOpen={isDepartamentoOpen} />
           </div>
 
-          <CuponsButton 
-            label="Cupons" 
-            iconWhite={iconCupomWhite} 
-            iconBlack={iconCupomBlack} 
+          <CuponsButton
+            label="Cupons"
+            iconWhite={iconCupomWhite}
+            iconBlack={iconCupomBlack}
           />
 
-          <MaisVendidoButton 
-            label="Mais vendidos" 
-            iconWhite={iconVendidosWhite} 
-            iconBlack={iconVendidosBlack} 
+          <MaisVendidoButton
+            label="Mais vendidos"
+            iconWhite={iconVendidosWhite}
+            iconBlack={iconVendidosBlack}
           />
+
+          {isEntregador && (
+            <Link
+              to="/entregador"
+              className="flex h-[38px] items-center gap-2 rounded-tl-[12px] rounded-br-[12px] border border-[#FF6B00] bg-black/70 px-5 font-['Inter'] text-[14px] font-semibold text-[#FFB26B] transition-all hover:bg-[#FF6B00] hover:text-white cursor-pointer pointer-events-auto"
+            >
+              <span>Entregas</span>
+            </Link>
+          )}
         </div>
       </div>
     </header>
