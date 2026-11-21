@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,6 +22,11 @@ public class UsuarioController {
     @PostMapping(RotasUsuario.CADASTRO)
     public ResponseEntity<UsuarioResponseDTO> criarConta(@RequestBody @Valid UsuarioRequestDTO requestDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.criarConta(requestDTO));
+    }
+
+    @GetMapping(RotasUsuario.LISTAR_ENTREGADORES)
+    public ResponseEntity<List<UsuarioResponseDTO>> listarEntregadores() {
+        return ResponseEntity.ok(usuarioService.listarEntregadores());
     }
 
     @GetMapping(RotasUsuario.BUSCAR_POR_ID)

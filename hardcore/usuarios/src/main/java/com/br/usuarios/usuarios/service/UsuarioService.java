@@ -13,6 +13,7 @@ import com.br.usuarios.usuarios.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -58,5 +59,12 @@ public class UsuarioService {
                 .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado com o ID: " + id));
         
         return usuarioMapper.toDTO(usuario);
+    }
+
+    public List<UsuarioResponseDTO> listarEntregadores() {
+        return usuarioRepository.findByPerfil(UsuarioEnum.ENTREGADOR)
+                .stream()
+                .map(usuarioMapper::toDTO)
+                .toList();
     }
 }
