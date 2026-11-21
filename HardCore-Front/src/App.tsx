@@ -37,6 +37,7 @@ export default function App() {
                 <Route path="/gerenciador" element={<TelaInicialGerenciador />} />
                 <Route path="/gerenciar-produtos" element={<GerenciarProdutos />} />
                 <Route path="/cadastrar-produto" element={<CadastrarProduto />} />
+                <Route path="/editar-produto/:id" element={<CadastrarProduto />} />
                 <Route path="/precos-estoque" element={<PrecosEstoque />} />
                 <Route path="/gerenciar-pedidos" element={<GerenciarPedidos />} />
               </Routes>

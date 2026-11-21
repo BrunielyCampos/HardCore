@@ -226,10 +226,13 @@ export default function GerenciarProdutos() {
                   </div>
                   
                   <div className="flex flex-col flex-1 gap-2">
-                    <button className="flex items-center gap-1.5 text-[#FF7070] text-[12px] font-normal hover:underline w-fit cursor-pointer">
+                    <Link
+                      to={`/editar-produto/${prod.id}`}
+                      className="flex items-center gap-1.5 text-[#FF7070] text-[12px] font-normal hover:underline w-fit cursor-pointer"
+                    >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                       Editar
-                    </button>
+                    </Link>
                     <button onClick={() => handleExcluir(prod.id)} className="text-[#B7B7BF] text-[10px] text-left hover:underline w-fit cursor-pointer">
                       Excluir (Despublicar)
                     </button>
