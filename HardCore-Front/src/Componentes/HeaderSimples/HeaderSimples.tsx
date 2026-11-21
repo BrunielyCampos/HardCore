@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useCarrinho } from '../../Context/CarrinhoContext'; // <-- Importe o contexto (ajuste os '../../' se necessário)
+import { useCarrinho } from '../../Context/CarrinhoContext';
+import { useAuth } from '../../Context/AuthContext';
 import DepartamentoButton from '../BotoesHeader/DepartamentoButton';
 import CuponsButton from '../BotoesHeader/CuponsButton';
 import MaisVendidoButton from '../BotoesHeader/MaisVendidosButton';
@@ -22,7 +23,14 @@ import iconVendidosBlack from '../BotoesHeader/AssetsBotao/iconmind_best-seller-
 
 export default function HeaderSimples() {
   const [isDepartamentoOpen, setIsDepartamentoOpen] = useState(false);
-  const { quantidadeCarrinho } = useCarrinho(); // <-- Puxa a quantidade dinâmica do contexto
+  const { quantidadeCarrinho } = useCarrinho();
+  const { isAuthenticated, usuario, logout } = useAuth();
+
+  const nomeExibicao = usuario?.email ? usuario.email.split('@')[0] : '';
+  const isGerente =
+    usuario?.perfil === 'ROLE_GERENTE' ||
+    usuario?.perfil === 'GERENTE' ||
+    usuario?.perfil === 'ROLE_ADMIN';
 
   return (
     <header className="fixed top-0 left-0 w-full h-[140px] z-50 bg-white shrink-0 shadow-md flex justify-center items-center">
@@ -76,11 +84,49 @@ export default function HeaderSimples() {
           </div>
 
           <div className="flex items-center gap-[10px]">
-            <img src={iconUser} alt="Perfil" className="h-[40px] w-[40px] object-contain" />
-            <span className="font-['Inter'] text-[14px] font-bold text-white leading-tight">
-              <Link to="/login" className="hover:text-[#B3B3B3] transition-colors cursor-pointer pointer-events-auto">Entre</Link> ou<br />
-              <Link to="/cadastro" className="hover:text-[#B3B3B3] transition-colors cursor-pointer pointer-events-auto">Cadastre-se</Link>
-            </span>
+            {isAuthenticated && usuario ? (
+              <div className="flex flex-col items-start leading-tight gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-['Inter'] text-[15px] font-bold text-white">
+                    {nomeExibicao}
+                  </span>
+                  {isGerente && (
+                    <span className="rounded-[4px] bg-[#FF0000] px-1.5 py-[2px] font-['Inter'] text-[9px] font-bold uppercase tracking-wider text-white shadow-[0_0_8px_rgba(255,0,0,0.5)]">
+                      Gerente
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {isGerente && (
+                    <>
+                      <Link
+                        to="/gerenciador"
+                        className="font-['Inter'] text-[12px] font-semibold text-[#FF7070] hover:text-white transition-colors cursor-pointer pointer-events-auto"
+                      >
+                        Painel
+                      </Link>
+                      <span className="text-white/30 text-[10px]">•</span>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="font-['Inter'] text-[12px] font-light text-white/70 hover:text-[#FF5555] transition-colors cursor-pointer pointer-events-auto"
+                  >
+                    Sair
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <img src={iconUser} alt="Perfil" className="h-[40px] w-[40px] object-contain" />
+                <span className="font-['Inter'] text-[14px] font-bold text-white leading-tight">
+                  <Link to="/login" className="hover:text-[#B3B3B3] transition-colors cursor-pointer pointer-events-auto">Entre</Link> ou<br />
+                  <Link to="/cadastro" className="hover:text-[#B3B3B3] transition-colors cursor-pointer pointer-events-auto">Cadastre-se</Link>
+                </span>
+              </>
+            )}
           </div>
 
           {/* Carrinho Dinâmico */}

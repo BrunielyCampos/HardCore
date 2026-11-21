@@ -15,15 +15,27 @@ import carrossel2 from '../assets/HomeAsset/Carrossel2.png';
 import carrossel3 from '../assets/HomeAsset/Carrossel3.png';
 
 const imagensCarrossel = [carrossel1, carrossel2, carrossel3];
+const ITENS_POR_PAGINA = 8;
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [paginaAtual, setPaginaAtual] = useState(1);
 
-  const { produtos } = useProdutos();
+  const { produtos, carregando } = useProdutos();
 
-  const produtosPublicados = produtos.filter(p => p.status === 'Publicado');
-  const produtosDestaque = produtosPublicados.filter(p => p.secaoVitrine === 'Destaque').slice(0, 2);
-  const produtosOferta = produtosPublicados.filter(p => p.secaoVitrine === 'Oferta').slice(0, 8);
+  const produtosPublicados = produtos.filter((p) => p.status === 'Publicado');
+  const produtosDestaque = produtosPublicados.filter((p) => p.secaoVitrine === 'Destaque').slice(0, 2);
+  const todosOferta = produtosPublicados.filter((p) => p.secaoVitrine === 'Oferta');
+
+  const totalPaginas = Math.max(1, Math.ceil(todosOferta.length / ITENS_POR_PAGINA));
+  const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+  const produtosOferta = todosOferta.slice(inicio, inicio + ITENS_POR_PAGINA);
+
+  useEffect(() => {
+    if (paginaAtual > totalPaginas) {
+      setPaginaAtual(1);
+    }
+  }, [paginaAtual, totalPaginas]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -89,13 +101,17 @@ export default function Home() {
               style={{ background: 'linear-gradient(180deg, #DFDDD8 0%, #B17E07 100%)' }}
             >
               <div className="flex w-full flex-wrap lg:flex-nowrap items-center justify-center lg:justify-end gap-6 xl:gap-10 p-6 lg:py-8 lg:pl-[180px] xl:pl-[240px] lg:pr-10 xl:pr-16">
-                {produtosDestaque.length > 0 ? (
+                {carregando ? (
+                  <div className="w-full flex justify-center text-center text-white/80 italic font-['Iosevka_Charon'] text-lg lg:text-xl">
+                    Carregando destaques...
+                  </div>
+                ) : produtosDestaque.length > 0 ? (
                   produtosDestaque.map((prod) => (
                     <CaixaProdutos
                       key={prod.id}
                       id={prod.id}
                       nota="5.0"
-                      imagemProduto={prod.imagemPrincipal || "https://placehold.co/200x200"}
+                      imagemProduto={prod.imagemPrincipal || 'https://placehold.co/200x200'}
                       nomeProduto={prod.nome}
                       preco={`R$ ${prod.precoVenda.toFixed(2).replace('.', ',')}`}
                       parcelamento={`No PIX ou 10x de R$ ${(prod.precoVenda / 10).toFixed(2).replace('.', ',')}`}
@@ -120,20 +136,31 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Em Oferta */}
+          {/* Em Oferta (Prateleira com Paginação) */}
           <section className="mt-20 lg:mt-28 flex w-full flex-col">
-            <h2 className="mb-5 font-['Iosevka_Charon'] text-3xl lg:text-[40px] font-bold text-white">
-              EM OFERTA
-            </h2>
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="font-['Iosevka_Charon'] text-3xl lg:text-[40px] font-bold text-white">
+                EM OFERTA
+              </h2>
+              {todosOferta.length > 0 && (
+                <span className="font-['Inter'] text-sm text-white/60">
+                  Página {paginaAtual} de {totalPaginas} ({todosOferta.length} itens)
+                </span>
+              )}
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
-              {produtosOferta.length > 0 ? (
+              {carregando ? (
+                <span className="col-span-full text-white/60 text-[18px] italic font-['Iosevka_Charon']">
+                  Carregando produtos da prateleira...
+                </span>
+              ) : produtosOferta.length > 0 ? (
                 produtosOferta.map((prod) => (
                   <CaixaProdutos
                     key={prod.id}
                     id={prod.id}
                     nota="5.0"
-                    imagemProduto={prod.imagemPrincipal || "https://placehold.co/200x200"}
+                    imagemProduto={prod.imagemPrincipal || 'https://placehold.co/200x200'}
                     nomeProduto={prod.nome}
                     preco={`R$ ${prod.precoVenda.toFixed(2).replace('.', ',')}`}
                     parcelamento={`No PIX ou 10x de R$ ${(prod.precoVenda / 10).toFixed(2).replace('.', ',')}`}
@@ -145,6 +172,41 @@ export default function Home() {
                 </span>
               )}
             </div>
+
+            {/* Controles de Paginação */}
+            {totalPaginas > 1 && (
+              <div className="mt-10 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setPaginaAtual((p) => Math.max(1, p - 1))}
+                  disabled={paginaAtual === 1}
+                  className="px-4 py-2 rounded-[6px] bg-[#202022] border border-[#414144] text-white text-sm font-semibold hover:bg-[#391719] hover:border-[#FF0000] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  &lt; Anterior
+                </button>
+
+                {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => setPaginaAtual(num)}
+                    className={`w-10 h-10 rounded-[6px] text-sm font-bold transition-colors cursor-pointer ${
+                      num === paginaAtual
+                        ? 'bg-[#FF0000] text-white shadow-[0_0_12px_rgba(255,0,0,0.4)]'
+                        : 'bg-[#202022] border border-[#414144] text-white/80 hover:bg-[#391719]'
+                    }`}
+                  >
+                    {num}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => setPaginaAtual((p) => Math.min(totalPaginas, p + 1))}
+                  disabled={paginaAtual === totalPaginas}
+                  className="px-4 py-2 rounded-[6px] bg-[#202022] border border-[#414144] text-white text-sm font-semibold hover:bg-[#391719] hover:border-[#FF0000] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Próxima 
+                </button>
+              </div>
+            )}
           </section>
 
           {/* Banner Horizontal Rodapé */}
