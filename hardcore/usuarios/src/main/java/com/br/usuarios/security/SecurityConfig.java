@@ -23,6 +23,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.GET, "/", "/index.html", "/ui/**", "/favicon.ico").permitAll()
+
 
                 .requestMatchers(
                     "/admin/login",
@@ -31,6 +33,9 @@ public class SecurityConfig {
                 ).permitAll()
 
                 .requestMatchers(HttpMethod.GET, "/admin/usuarios/entregadores")
+                .hasAnyRole("ADMIN", "GERENTE")
+
+                .requestMatchers(HttpMethod.GET, "/usuarios/entregadores")
                 .hasAnyRole("ADMIN", "GERENTE")
 
                 .requestMatchers(HttpMethod.GET, "/usuarios/{id}")

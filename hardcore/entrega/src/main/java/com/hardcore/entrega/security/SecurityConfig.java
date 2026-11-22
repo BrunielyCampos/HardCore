@@ -36,6 +36,7 @@ public class SecurityConfig {
             //     .anyRequest().authenticated())
 
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.GET, "/", "/index.html", "/ui/**", "/favicon.ico").permitAll()
                 .requestMatchers("/error").permitAll()
 
                 .requestMatchers(HttpMethod.POST, "/entregas/atribuir")

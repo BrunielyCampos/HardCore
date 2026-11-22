@@ -28,6 +28,8 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.GET, "/", "/index.html", "/ui/**", "/favicon.ico").permitAll()
+
 
                         .requestMatchers("/webhooks/abacatepay", "/error")
                         .permitAll()
@@ -39,9 +41,12 @@ public class SecurityConfig {
                         .authenticated()
 
                         .requestMatchers(HttpMethod.GET,
-                                "/carrinho/cliente/*",
                                 "/pedidos/*",
                                 "/pedidos/cliente/*")
+                        .authenticated()
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/carrinho/cliente/*")
                         .hasAuthority("ROLE_GERENTE")
 
                         .requestMatchers(

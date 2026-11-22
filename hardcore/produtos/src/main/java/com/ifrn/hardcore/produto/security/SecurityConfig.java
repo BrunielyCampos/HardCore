@@ -30,19 +30,29 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.GET, "/", "/index.html", "/ui/**", "/favicon.ico").permitAll()
+
 
                         .requestMatchers("/error").permitAll()
+
+                        // Vitrine pública: qualquer visitante ou cliente pode consultar produtos, prateleira, estoque e avaliações do produto
+                        .requestMatchers(HttpMethod.GET,
+                                "/produtos/**",
+                                "/prateleira/**",
+                                "/estoque/**",
+                                "/avaliacoes/produtos/**")
+                        .permitAll()
 
                         // Qualquer ator autenticado pode cadastrar avaliação.
                         .requestMatchers(HttpMethod.POST,
                                 "/avaliacoes/cadastrar")
                         .authenticated()
 
-                        // Somente gerente pode consultar ou excluir avaliações.
+                        // Somente gerente pode gerenciar avaliações (excluir, etc.).
                         .requestMatchers("/avaliacoes/**")
                         .hasAuthority("ROLE_GERENTE")
 
-                        // Todas as demais rotas continuam exclusivas do gerente.
+                        // Todas as demais rotas (POST, PUT, DELETE) continuam exclusivas do gerente.
                         .anyRequest()
                         .hasAuthority("ROLE_GERENTE")
                 )
