@@ -120,6 +120,84 @@ class EntregaServiceUnitTest {
         );
     }
 
+    @Test
+    @DisplayName("Deve buscar entrega pelo ID do pedido")
+    void deveBuscarEntregaPorPedido() {
+        Entrega entrega = entregaRepo.save(
+                new Entrega(null, 104L, 8L, "Rua D, 40", EntregaEnum.PENDENTE, null)
+        );
+
+        EntregaResponseDTO resposta =
+                entregaService.buscarEntregaPorPedido(104L);
+
+        assertNotNull(resposta);
+        assertEquals(entrega.getId(), resposta.getId());
+        assertEquals(104L, resposta.getIdPedido());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção quando não encontrar entrega pelo pedido")
+    void deveLancarExcecaoQuandoEntregaDoPedidoNaoExistir() {
+        assertThrows(
+                EntregaNaoEncontradaException.class,
+                () -> entregaService.buscarEntregaPorPedido(999L)
+        );
+    }
+
+    @Test
+    @DisplayName("Deve listar entregas de um entregador")
+    void deveBuscarEntregasPorEntregador() {
+        entregaRepo.save(
+                new Entrega(null, 105L, 8L, "Rua E, 50", EntregaEnum.PENDENTE, null)
+        );
+
+        entregaRepo.save(
+                new Entrega(null, 106L, 8L, "Rua F, 60", EntregaEnum.EM_ENTREGA, null)
+        );
+
+        List<EntregaResponseDTO> resultado =
+                entregaService.buscarPorEntregador(8L);
+
+        assertEquals(2, resultado.size());
+        assertEquals(105L, resultado.get(0).getIdPedido());
+        assertEquals(106L, resultado.get(1).getIdPedido());
+    }
+
+    @Test
+    @DisplayName("Deve retornar lista vazia quando entregador não possuir entregas")
+    void deveRetornarListaVaziaQuandoNaoExistiremEntregas() {
+        List<EntregaResponseDTO> resultado =
+                entregaService.buscarPorEntregador(999L);
+
+        assertNotNull(resultado);
+        assertTrue(resultado.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Deve cancelar uma entrega")
+    void deveCancelarEntrega() {
+        Entrega entrega = entregaRepo.save(
+                new Entrega(null, 107L, 9L, "Rua G, 70", EntregaEnum.EM_ENTREGA, null)
+        );
+
+        entregaService.cancelarEntrega(entrega.getId());
+
+        Entrega atualizada =
+                entregaRepo.findById(entrega.getId()).orElseThrow();
+
+        assertEquals(EntregaEnum.CANCELADA, atualizada.getEstadoEntrega());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao cancelar entrega inexistente")
+    void deveLancarExcecaoAoCancelarEntregaInexistente() {
+        assertThrows(
+                EntregaNaoEncontradaException.class,
+                () -> entregaService.cancelarEntrega(999L)
+        );
+    }
+
+
     static class FakeEntregaRepository implements EntregaRepository {
         private final Map<Long, Entrega> db = new HashMap<>();
         private long seq = 1L;
