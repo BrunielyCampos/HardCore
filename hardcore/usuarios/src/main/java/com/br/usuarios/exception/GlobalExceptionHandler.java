@@ -27,11 +27,38 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            if (error instanceof FieldError fieldError) {
+                String errorMessage = fieldError.getDefaultMessage();
+                errors.put(fieldError.getField(),
+                        errorMessage != null ? errorMessage : "Valor inválido");
+            } else {
+                String errorMessage = error.getDefaultMessage();
+                errors.put(error.getObjectName(),
+                        errorMessage != null ? errorMessage : "Valor inválido");
+            }
         });
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
+        Throwable root = ex;
+        while (root.getCause() != null) {
+            root = root.getCause();
+        }
+
+        String rootMessage = root.getMessage();
+        if (rootMessage == null || rootMessage.isBlank()) {
+            rootMessage = root.getClass().getSimpleName();
+        }
+
+        System.err.println("ERRO REAL: " + root.getClass().getName() + " -> " + rootMessage);
+
+        Map<String, String> erro = new HashMap<>();
+        erro.put("erro", ex.getClass().getSimpleName());
+        erro.put("causaRaiz", root.getClass().getName());
+        erro.put("mensagem", rootMessage);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(erro);
     }
 }
