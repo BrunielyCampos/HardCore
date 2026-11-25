@@ -29,6 +29,9 @@ public class Produto {
     @NotNull
     private Double preco;
 
+    @Column(name = "imagem_principal", columnDefinition = "TEXT")
+    private String imagemPrincipal;
+
     @OneToOne(mappedBy = "produto")
     private Estoque estoque;
 
@@ -38,12 +41,14 @@ public class Produto {
     @OneToMany(mappedBy = "produto")
     private List<AvaliacaoCliente> avaliacoes;
 
-    public Produto(Long id, String nome, String marca, String categoria, @NotNull Double preco, Prateleira prateleira) {
+    public Produto(Long id, String nome, String marca, String categoria, @NotNull Double preco,
+                   String imagemPrincipal, Prateleira prateleira) {
         this.id = id;
         this.nome = nome;
         this.marca = marca;
         this.categoria = categoria;
         this.preco = preco;
+        this.imagemPrincipal = imagemPrincipal;
         this.prateleira = prateleira;
     }
 }

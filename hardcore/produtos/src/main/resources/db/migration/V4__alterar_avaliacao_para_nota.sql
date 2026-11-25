@@ -1,0 +1,3 @@
+ALTER TABLE tb_avaliacao_cliente
+ALTER COLUMN avaliacao TYPE INTEGER
+USING (CASE WHEN avaliacao THEN 5 ELSE 1 END);

@@ -1,9 +1,12 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 
+export type PerfilFront = "CLIENTE" | "ENTREGADOR" | "GERENCIADOR" | "ADMINISTRADOR";
+
 export interface UsuarioLogado {
   usuarioId: number;
   email: string;
-  perfil: string;
+  perfilRaw: string;
+  perfil: PerfilFront | string;
 }
 
 export interface CadastroPayload {
@@ -27,16 +30,37 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
+export function mapearPerfilBackParaFront(perfilBack?: string | null): string {
+  if (!perfilBack) return "";
+  const limpo = perfilBack.trim().toUpperCase().replace(/^ROLE_/, "");
+
+  if (limpo === "ADMIN" || limpo === "ADMNISTRADOR" || limpo === "ADMINISTRADOR") {
+    return "ADMINISTRADOR";
+  }
+  if (limpo === "GERENTE" || limpo === "GERENCIADOR") {
+    return "GERENCIADOR";
+  }
+  if (limpo === "ENTREGADOR") {
+    return "ENTREGADOR";
+  }
+  if (limpo === "CLIENTE") {
+    return "CLIENTE";
+  }
+  return limpo;
+}
+
 function decodificarToken(token: string): UsuarioLogado | null {
   try {
     const payloadBase64 = token.split(".")[1];
     const payloadJson = atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/"));
     const payload = JSON.parse(payloadJson);
+    const perfilRaw = String(payload.perfil ?? "");
 
     return {
       usuarioId: payload.usuarioId ?? payload.adminId,
       email: payload.sub,
-      perfil: payload.perfil,
+      perfilRaw,
+      perfil: mapearPerfilBackParaFront(perfilRaw),
     };
   } catch {
     return null;
@@ -54,11 +78,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const login = async (email: string, senha: string) => {
-    const response = await fetch("/api/usuarios/usuarios/login", {
+    let response = await fetch("/api/usuarios/usuarios/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, senha }),
     });
+
+    if (!response.ok) {
+      response = await fetch("/api/usuarios/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, senha }),
+      });
+    }
 
     if (!response.ok) {
       const errorText = await response.text();

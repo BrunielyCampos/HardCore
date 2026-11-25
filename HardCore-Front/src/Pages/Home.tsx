@@ -24,8 +24,18 @@ export default function Home() {
   const { produtos, carregando } = useProdutos();
 
   const produtosPublicados = produtos.filter((p) => p.status === 'Publicado');
-  const produtosDestaque = produtosPublicados.filter((p) => p.secaoVitrine === 'Destaque').slice(0, 2);
+
+  // EM DESTAQUE: top 2 produtos com maior média de avaliação
+  const produtosDestaque = [...produtosPublicados]
+    .filter((p) => (p.totalAvaliacoes ?? 0) > 0)
+    .sort((a, b) => (b.mediaAvaliacoes ?? 0) - (a.mediaAvaliacoes ?? 0))
+    .slice(0, 2);
+
+  // EM OFERTA: gerenciado pelo painel
   const todosOferta = produtosPublicados.filter((p) => p.secaoVitrine === 'Oferta');
+
+  // VITRINE GERAL: produtos publicados que não estão em oferta
+  const produtosVitrineGeral = produtosPublicados.filter((p) => p.secaoVitrine !== 'Oferta');
 
   const totalPaginas = Math.max(1, Math.ceil(todosOferta.length / ITENS_POR_PAGINA));
   const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
@@ -110,7 +120,7 @@ export default function Home() {
                     <CaixaProdutos
                       key={prod.id}
                       id={prod.id}
-                      nota="5.0"
+                      nota={(prod.mediaAvaliacoes ?? 0).toFixed(1)}
                       imagemProduto={prod.imagemPrincipal || 'https://placehold.co/200x200'}
                       nomeProduto={prod.nome}
                       preco={`R$ ${prod.precoVenda.toFixed(2).replace('.', ',')}`}
@@ -119,7 +129,7 @@ export default function Home() {
                   ))
                 ) : (
                   <div className="w-full flex justify-center text-center text-white/70 italic font-['Iosevka_Charon'] text-lg lg:text-xl">
-                    Nenhum produto em destaque no momento. Cadastre no Painel!
+                    Nenhum produto avaliado em destaque no momento.
                   </div>
                 )}
               </div>
@@ -159,7 +169,7 @@ export default function Home() {
                   <CaixaProdutos
                     key={prod.id}
                     id={prod.id}
-                    nota="5.0"
+                    nota={(prod.mediaAvaliacoes ?? 0).toFixed(1)}
                     imagemProduto={prod.imagemPrincipal || 'https://placehold.co/200x200'}
                     nomeProduto={prod.nome}
                     preco={`R$ ${prod.precoVenda.toFixed(2).replace('.', ',')}`}
@@ -203,11 +213,30 @@ export default function Home() {
                   disabled={paginaAtual === totalPaginas}
                   className="px-4 py-2 rounded-[6px] bg-[#202022] border border-[#414144] text-white text-sm font-semibold hover:bg-[#391719] hover:border-[#FF0000] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  Próxima 
+                  Próxima
                 </button>
               </div>
             )}
           </section>
+
+          {/* Vitrine Geral (produtos que não estão em oferta) */}
+          {produtosVitrineGeral.length > 0 && (
+            <section className="mt-16 lg:mt-24 flex w-full flex-col">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+                {produtosVitrineGeral.map((prod) => (
+                  <CaixaProdutos
+                    key={prod.id}
+                    id={prod.id}
+                    nota={(prod.mediaAvaliacoes ?? 0).toFixed(1)}
+                    imagemProduto={prod.imagemPrincipal || 'https://placehold.co/200x200'}
+                    nomeProduto={prod.nome}
+                    preco={`R$ ${prod.precoVenda.toFixed(2).replace('.', ',')}`}
+                    parcelamento={`No PIX ou 10x de R$ ${(prod.precoVenda / 10).toFixed(2).replace('.', ',')}`}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Banner Horizontal Rodapé */}
           <section className="mt-20 lg:mt-28 w-full">

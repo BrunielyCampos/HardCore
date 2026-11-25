@@ -34,13 +34,18 @@ export default function HeaderAnimado() {
   const { isAuthenticated, usuario, logout } = useAuth();
 
   const nomeExibicao = usuario?.email ? usuario.email.split('@')[0] : '';
+  const perfilNormalizado =
+    usuario?.perfil?.trim().toUpperCase().replace(/^ROLE_/, '') ?? '';
+
+  const isAdmin =
+    perfilNormalizado === 'ADMIN' ||
+    perfilNormalizado === 'ADMINISTRADOR' ||
+    perfilNormalizado === 'ADMNISTRADOR';
   const isGerente =
-    usuario?.perfil === 'ROLE_GERENTE' ||
-    usuario?.perfil === 'GERENTE' ||
-    usuario?.perfil === 'ROLE_ADMIN';
+    perfilNormalizado === 'GERENTE' ||
+    perfilNormalizado === 'GERENCIADOR';
   const isEntregador =
-    usuario?.perfil === 'ROLE_ENTREGADOR' ||
-    usuario?.perfil === 'ENTREGADOR';
+    perfilNormalizado === 'ENTREGADOR';
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -91,6 +96,11 @@ export default function HeaderAnimado() {
                   <span className="font-['Inter'] text-[15px] font-bold text-white">
                     {nomeExibicao}
                   </span>
+                  {isAdmin && (
+                    <span className="rounded-[4px] bg-[#D97706] px-1.5 py-[2px] font-['Inter'] text-[9px] font-bold uppercase tracking-wider text-white shadow-[0_0_8px_rgba(217,119,6,0.6)]">
+                      Administrador
+                    </span>
+                  )}
                   {isGerente && (
                     <span className="rounded-[4px] bg-[#FF0000] px-1.5 py-[2px] font-['Inter'] text-[9px] font-bold uppercase tracking-wider text-white shadow-[0_0_8px_rgba(255,0,0,0.5)]">
                       Gerente
@@ -104,6 +114,17 @@ export default function HeaderAnimado() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {isAdmin && (
+                    <>
+                      <Link
+                        to="/gerenciar-usuarios"
+                        className="font-['Inter'] text-[12px] font-semibold text-[#FBBF24] hover:text-white transition-colors cursor-pointer pointer-events-auto"
+                      >
+                        Painel
+                      </Link>
+                      <span className="text-white/30 text-[10px]">•</span>
+                    </>
+                  )}
                   {isGerente && (
                     <>
                       <Link
@@ -126,7 +147,7 @@ export default function HeaderAnimado() {
                       <span className="text-white/30 text-[10px]">•</span>
                     </>
                   )}
-                  {!isGerente && !isEntregador && (
+                  {!isAdmin && !isGerente && !isEntregador && (
                     <>
                       <Link
                         to="/meus-pedidos"
@@ -184,7 +205,9 @@ export default function HeaderAnimado() {
             <DepartamentoDropdown isOpen={isDepartamentoOpen} />
           </div>
           <CuponsButton label="Cupons" iconWhite={iconCupomWhite} iconBlack={iconCupomBlack} />
-          <MaisVendidoButton label="Mais vendidos" iconWhite={iconVendidosWhite} iconBlack={iconVendidosBlack} />
+          <Link to="/mais-vendidos" className="pointer-events-auto">
+            <MaisVendidoButton label="Mais vendidos" iconWhite={iconVendidosWhite} iconBlack={iconVendidosBlack} />
+          </Link>
 
           {isEntregador && (
             <Link

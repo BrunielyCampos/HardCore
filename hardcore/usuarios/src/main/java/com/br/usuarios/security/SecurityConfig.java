@@ -31,19 +31,19 @@ public class SecurityConfig {
                 ).permitAll()
 
                 .requestMatchers(HttpMethod.GET, "/admin/usuarios/entregadores")
-                .hasAnyRole("ADMIN", "GERENTE")
+                .hasAnyRole("ADMIN", "ADMINISTRADOR", "GERENTE")
 
                 .requestMatchers(HttpMethod.GET, "/usuarios/entregadores")
-                .hasAnyRole("ADMIN", "GERENTE")
+                .hasAnyRole("ADMIN", "ADMINISTRADOR", "GERENTE")
 
                 .requestMatchers(HttpMethod.GET, "/usuarios/{id}")
-                .hasAnyRole("ADMIN")
+                .hasAnyRole("ADMIN", "ADMINISTRADOR")
 
                 .requestMatchers("/admin/**")
-                .hasRole("ADMIN")
+                .hasAnyRole("ADMIN", "ADMINISTRADOR")
 
                 .requestMatchers(HttpMethod.GET, "/usuarios/*/validar-entregador")
-                .hasAnyRole("ADMIN", "GERENTE")
+                .hasAnyRole("ADMIN", "ADMINISTRADOR", "GERENTE")
 
                 .anyRequest().authenticated()
             )
