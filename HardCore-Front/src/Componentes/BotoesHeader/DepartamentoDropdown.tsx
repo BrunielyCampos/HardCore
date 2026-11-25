@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface DepartamentoDropdownProps {
   isOpen: boolean;
@@ -33,11 +34,18 @@ const departamentosData = [
   }
 ];
 
-export default function DepartamentoDropdown({ isOpen }: DepartamentoDropdownProps) {
+export default function DepartamentoDropdown({ isOpen, onClose }: DepartamentoDropdownProps) {
+  const navigate = useNavigate();
+
   if (!isOpen) return null;
 
+  const selecionarCategoria = (nomeCategoria: string) => {
+    onClose?.();
+    navigate(`/categoria/${encodeURIComponent(nomeCategoria)}`);
+  };
+
   return (
-    <div className="absolute left-0 top-[45px] z-50 w-[600px] rounded-[8px] border border-[#525252] bg-[#0E0E0E] p-[20px] shadow-2xl overflow-hidden cursor-default">
+    <div className="absolute left-0 top-[45px] z-50 w-[600px] rounded-[8px] border border-[#525252] bg-[#0E0E0E] p-[20px] shadow-2xl overflow-hidden cursor-default pointer-events-auto">
       <div className="flex flex-col">
         <h2 className="font-['PoetsenOne',sans-serif] text-[20px] font-normal text-white leading-none">
           Todas as categorias
@@ -50,12 +58,16 @@ export default function DepartamentoDropdown({ isOpen }: DepartamentoDropdownPro
       <div className="mt-[15px] grid grid-cols-3 gap-[15px]">
         {departamentosData.map((coluna, index) => (
           <div key={index} className="flex flex-col gap-[4px]">
-            <h3 className="font-['PoetsenOne',sans-serif] text-[14px] font-normal text-[#FF1F1F] mb-[4px]">
+            <h3
+              onClick={() => selecionarCategoria(coluna.categoria)}
+              className="font-['PoetsenOne',sans-serif] text-[14px] font-normal text-[#FF1F1F] mb-[4px] cursor-pointer hover:underline"
+            >
               {coluna.categoria}
             </h3>
             {coluna.itens.map((item, itemIndex) => (
-              <div 
-                key={itemIndex} 
+              <div
+                key={itemIndex}
+                onClick={() => selecionarCategoria(item)}
                 className="flex h-[28px] items-center px-[6px] rounded hover:bg-[#202020] cursor-pointer transition-colors"
               >
                 <span className="font-['Inter',sans-serif] text-[13px] font-normal text-white">

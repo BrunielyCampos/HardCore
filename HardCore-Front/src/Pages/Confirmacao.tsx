@@ -91,11 +91,14 @@ export default function Confirmacao() {
 
   const step1Ativo = !cancelada && pagamentoConfirmado;
   const step2Ativo =
-    !cancelada && (estadoEntrega === 'EM_ENTREGA' || estadoEntrega === 'ENTREGA_FEITA');
+    !cancelada &&
+    (estadoEntrega === 'PENDENTE' ||
+      estadoEntrega === 'EM_ENTREGA' ||
+      estadoEntrega === 'ENTREGA_FEITA');
   const step3Ativo = !cancelada && estadoEntrega === 'ENTREGA_FEITA';
 
   const labelStatusAtual = (() => {
-    if (estadoEntrega === 'EM_ENTREGA') return 'Em rota de entrega';
+    if (estadoEntrega === 'PENDENTE' || estadoEntrega === 'EM_ENTREGA') return 'Em rota de entrega';
     if (estadoEntrega === 'ENTREGA_FEITA') return 'Entrega finalizada';
     if (estadoEntrega === 'CANCELADA') return 'Entrega cancelada';
     if (!pagamentoConfirmado) return 'Aguardando pagamento';

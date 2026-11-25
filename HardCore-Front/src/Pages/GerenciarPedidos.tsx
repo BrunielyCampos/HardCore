@@ -15,7 +15,7 @@ import {
 const ENDERECO_CHECKOUT_KEY = '@hardcore:endereco_checkout';
 
 export default function GerenciarPedidos() {
-  const { pedidos, atualizarEntrega } = usePedidos();
+  const { pedidos, atualizarEntrega, cancelarPedido, estornarPedido } = usePedidos();
   const { token } = useAuth();
 
   const [entregadores, setEntregadores] = useState<EntregadorDTO[]>([]);
@@ -117,6 +117,34 @@ export default function GerenciarPedidos() {
     }
   };
 
+  const handleCancelarPedido = async (idPedido: string) => {
+    if (!window.confirm(`Cancelar o pedido #${idPedido}?`)) return;
+    try {
+      setProcessandoId(idPedido);
+      setErroGlobal(null);
+      await cancelarPedido(idPedido);
+    } catch (err) {
+      setErroGlobal(err instanceof Error ? err.message : 'Erro ao cancelar pedido.');
+    } finally {
+      setProcessandoId(null);
+    }
+  };
+
+  const handleEstornarPedido = async (idPedido: string) => {
+    const motivo = window.prompt(`Motivo do estorno para o pedido #${idPedido}:`);
+    if (!motivo || !motivo.trim()) return;
+    try {
+      setProcessandoId(idPedido);
+      setErroGlobal(null);
+      await estornarPedido(idPedido, motivo.trim());
+      alert(`Estorno do pedido #${idPedido} realizado!`);
+    } catch (err) {
+      setErroGlobal(err instanceof Error ? err.message : 'Erro ao estornar pedido.');
+    } finally {
+      setProcessandoId(null);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen w-full bg-[#121214] font-['Inter']">
       <header className="flex w-full h-[112px] px-8 bg-gradient-to-r from-[#131313] via-[#3D0000] to-[#030000] border-b border-[#520D10] items-center gap-6 shrink-0">
@@ -185,7 +213,7 @@ export default function GerenciarPedidos() {
               <div className="w-[170px] text-[#B7B7BF] text-[11px] font-normal">ITENS / TOTAL</div>
               <div className="w-[140px] text-[#B7B7BF] text-[11px] font-normal">STATUS</div>
               <div className="flex-1 text-[#B7B7BF] text-[11px] font-normal">ATRIBUIÇÃO DE ENTREGADOR</div>
-              <div className="w-[160px] text-[#B7B7BF] text-[11px] font-normal text-right">AÇÕES</div>
+              <div className="w-[180px] text-[#B7B7BF] text-[11px] font-normal text-right">AÇÕES</div>
             </div>
 
             {pedidos.length === 0 ? (
@@ -204,13 +232,16 @@ export default function GerenciarPedidos() {
                 const enderecoValor =
                   enderecoInput[prod.id] ?? obterEnderecoPadrao(prod.enderecoDestino);
 
-                const statusLabel = estado
-                  ? estado === 'EM_ENTREGA'
-                    ? 'Em rota'
-                    : estado === 'ENTREGA_FEITA'
-                      ? 'Entrega feita'
-                      : 'Cancelada'
-                  : 'Aguardando';
+                const statusLabel =
+                  prod.status === 'Cancelado'
+                    ? 'Cancelado'
+                    : estado
+                      ? estado === 'EM_ENTREGA'
+                        ? 'Em rota'
+                        : estado === 'ENTREGA_FEITA'
+                          ? 'Entrega feita'
+                          : 'Cancelada'
+                      : 'Aguardando';
 
                 const statusStyle = entregue
                   ? 'bg-[#1a2b3c] border-[#4dabf7] text-[#4dabf7]'
@@ -279,27 +310,49 @@ export default function GerenciarPedidos() {
                       )}
                     </div>
 
-                    <div className="w-[160px] flex justify-end">
-                      {podeAtribuir && (
-                        <button
-                          disabled={processandoId === prod.id}
-                          onClick={() => handleDespachar(prod.id, prod.enderecoDestino)}
-                          className="px-4 py-2 bg-[#FF0000] text-white text-[12px] font-bold rounded-[4px] hover:bg-[#cc0000] transition-colors cursor-pointer disabled:opacity-50"
-                        >
-                          {processandoId === prod.id ? 'ENVIANDO...' : 'DESPACHAR'}
-                        </button>
-                      )}
-                      {emRota && entrega && (
-                        <button
-                          disabled={processandoId === prod.id}
-                          onClick={() => handleCancelarEntrega(prod.id, entrega.id)}
-                          className="px-4 py-2 border border-[#FF0000] text-[#FF7070] text-[12px] font-bold rounded-[4px] hover:bg-[#391719] transition-colors cursor-pointer disabled:opacity-50"
-                        >
-                          {processandoId === prod.id ? 'CANCELANDO...' : 'CANCELAR'}
-                        </button>
-                      )}
-                      {entregue && (
-                        <span className="text-[#4dabf7] text-[12px] font-semibold">Finalizado</span>
+                    <div className="w-[180px] flex flex-col items-end gap-2">
+                      {prod.status === 'Cancelado' ? (
+                        <span className="text-[#FF7070] text-[12px] font-semibold">Pedido Cancelado</span>
+                      ) : (
+                        <>
+                          {podeAtribuir && (
+                            <button
+                              disabled={processandoId === prod.id}
+                              onClick={() => handleDespachar(prod.id, prod.enderecoDestino)}
+                              className="px-4 py-2 bg-[#FF0000] text-white text-[12px] font-bold rounded-[4px] hover:bg-[#cc0000] transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                              {processandoId === prod.id ? 'ENVIANDO...' : 'DESPACHAR'}
+                            </button>
+                          )}
+                          {emRota && entrega && (
+                            <button
+                              disabled={processandoId === prod.id}
+                              onClick={() => handleCancelarEntrega(prod.id, entrega.id)}
+                              className="px-4 py-2 border border-[#FF0000] text-[#FF7070] text-[12px] font-bold rounded-[4px] hover:bg-[#391719] transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                              {processandoId === prod.id ? 'CANCELANDO...' : 'CANCELAR ENTREGA'}
+                            </button>
+                          )}
+                          {entregue && (
+                            <span className="text-[#4dabf7] text-[12px] font-semibold">Finalizado</span>
+                          )}
+                          <div className="flex gap-2">
+                            <button
+                              disabled={processandoId === prod.id}
+                              onClick={() => handleCancelarPedido(prod.id)}
+                              className="px-2 py-1 border border-[#FF5555] text-[#FF7070] text-[10px] font-bold rounded-[4px] hover:bg-[#391719] cursor-pointer disabled:opacity-50"
+                            >
+                              CANCELAR PEDIDO
+                            </button>
+                            <button
+                              disabled={processandoId === prod.id}
+                              onClick={() => handleEstornarPedido(prod.id)}
+                              className="px-2 py-1 border border-[#FFB26B] text-[#FFB26B] text-[10px] font-bold rounded-[4px] hover:bg-[#3D250E] cursor-pointer disabled:opacity-50"
+                            >
+                              ESTORNAR
+                            </button>
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>

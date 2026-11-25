@@ -17,6 +17,7 @@ import PainelEntregador from './Pages/PainelEntregador';
 import GerenciarEntregas from './Pages/GerenciarEntregas';
 import MeusPedidos from './Pages/MeusPedidos';
 import GerenciarUsuarios from './Pages/GerenciarUsuarios';
+import Categoria from './Pages/Categoria';
 import { ProtectedRoute } from './Componentes/ProtectedRoute';
 import { CheckoutRoute } from './Componentes/CheckoutRoute';
 import { AuthProvider } from './Context/AuthContext';
@@ -38,6 +39,7 @@ export default function App() {
                 <Route path="/cadastro" element={<Cadastro />} />
                 <Route path="/produto/:id" element={<PaginaItem />} />
                 <Route path="/mais-vendidos" element={<MaisVendidos />} />
+                <Route path="/categoria/:categoria" element={<Categoria />} />
 
                 <Route
                   element={
@@ -48,17 +50,12 @@ export default function App() {
                   }
                 >
                   <Route path="/meus-pedidos" element={<MeusPedidos />} />
+                  <Route path="/confirmacao/:id" element={<Confirmacao />} />
 
-                  {/* Só entra se tiver pelo menos 1 item no carrinho */}
                   <Route element={<CheckoutRoute exigirCarrinho redirectTo="/" />}>
                     <Route path="/carrinho" element={<Carrinho />} />
                     <Route path="/identificacao" element={<Identificacao />} />
                     <Route path="/pagamento" element={<Pagamento />} />
-                  </Route>
-
-                  {/* Só entra se veio de uma finalização de pedido */}
-                  <Route element={<CheckoutRoute exigirConfirmacao />}>
-                    <Route path="/confirmacao/:id" element={<Confirmacao />} />
                   </Route>
                 </Route>
 

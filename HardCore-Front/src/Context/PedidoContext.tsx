@@ -38,6 +38,8 @@ interface PedidoContextData {
   setPedidoAtivo: (pedido: Pedido | null) => void;
   criarPedido: (itens: ProdutoCarrinho[], valorTotal: number) => Promise<Pedido>;
   buscarPedidoBackend: (id: string) => Promise<Pedido | null>;
+  cancelarPedido: (id: string) => Promise<Pedido>;
+  estornarPedido: (id: string, motivo: string) => Promise<Pedido>;
   atualizarEntrega: (id: string, motorista: string, veiculo: string, status: StatusEntrega) => void;
   obterPedido: (id: string) => Pedido | undefined;
 }
@@ -142,6 +144,57 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
     return headers;
   }, [token]);
 
+  const atualizarPedidoLocalComDTO = useCallback(
+    (dto: PedidoBackendDTO, idFallback?: string): Pedido => {
+      let resultado: Pedido | null = null;
+
+      setPedidos((prev) => {
+        const existente =
+          prev.find((p) => p.id === String(dto.id)) ||
+          (idFallback ? prev.find((p) => p.id === idFallback) : undefined);
+
+        resultado = {
+          id: String(dto.id),
+          itens: existente?.itens || [],
+          valorTotal: dto.valorCompra ?? existente?.valorTotal ?? 0,
+          status: mapearEstadoParaStatus(dto.estado),
+          estadoPagamento: dto.estadoPagamento,
+          urlPagamento: dto.urlPagamento ?? existente?.urlPagamento,
+          abacatePayCheckoutId: dto.abacatePayCheckoutId ?? existente?.abacatePayCheckoutId,
+          enderecoDestino:
+            existente?.enderecoDestino ||
+            localStorage.getItem(ENDERECO_CHECKOUT_KEY) ||
+            undefined,
+          motorista: existente?.motorista,
+          veiculo: existente?.veiculo,
+          dataCriacao: dto.dataCompra
+            ? new Date(dto.dataCompra)
+            : existente?.dataCriacao || new Date(),
+        };
+
+        return [resultado, ...prev.filter((p) => p.id !== resultado!.id)];
+      });
+
+      const pedidoFinal: Pedido = resultado ?? {
+        id: String(dto.id),
+        itens: [],
+        valorTotal: dto.valorCompra ?? 0,
+        status: mapearEstadoParaStatus(dto.estado),
+        estadoPagamento: dto.estadoPagamento,
+        urlPagamento: dto.urlPagamento,
+        abacatePayCheckoutId: dto.abacatePayCheckoutId,
+        dataCriacao: dto.dataCompra ? new Date(dto.dataCompra) : new Date(),
+      };
+
+      if (pedidoAtivo?.id === pedidoFinal.id) {
+        setPedidoAtivo(pedidoFinal);
+      }
+
+      return pedidoFinal;
+    },
+    [pedidoAtivo, setPedidoAtivo]
+  );
+
   const criarPedido = async (itens: ProdutoCarrinho[], valorTotal: number): Promise<Pedido> => {
     const idCliente = Number((usuario as any)?.id ?? (usuario as any)?.usuarioId);
     if (!idCliente || Number.isNaN(idCliente)) {
@@ -226,40 +279,52 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
         if (!res.ok) return null;
 
         const dto: PedidoBackendDTO = await res.json();
-        let atualizado: Pedido | null = null;
-
-        setPedidos((prev) => {
-          const existente =
-            prev.find((p) => p.id === String(dto.id)) ||
-            prev.find((p) => p.id === id);
-
-          atualizado = {
-            id: String(dto.id),
-            itens: existente?.itens || [],
-            valorTotal: dto.valorCompra,
-            status: mapearEstadoParaStatus(dto.estado),
-            estadoPagamento: dto.estadoPagamento,
-            urlPagamento: dto.urlPagamento,
-            abacatePayCheckoutId: dto.abacatePayCheckoutId,
-            enderecoDestino:
-              existente?.enderecoDestino ||
-              localStorage.getItem(ENDERECO_CHECKOUT_KEY) ||
-              undefined,
-            motorista: existente?.motorista,
-            veiculo: existente?.veiculo,
-            dataCriacao: dto.dataCompra ? new Date(dto.dataCompra) : new Date(),
-          };
-
-          return [atualizado, ...prev.filter((p) => p.id !== atualizado!.id)];
-        });
-
-        return atualizado;
+        return atualizarPedidoLocalComDTO(dto, id);
       } catch (err) {
         console.error('Erro ao consultar pedido:', err);
         return null;
       }
     },
-    [authHeaders]
+    [authHeaders, atualizarPedidoLocalComDTO]
+  );
+
+  const cancelarPedido = useCallback(
+    async (id: string): Promise<Pedido> => {
+      const res = await fetch(`/api/pedidos/pedidos/${id}/cancelar`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `Erro ao cancelar pedido (${res.status}).`);
+      }
+
+      const dto: PedidoBackendDTO = await res.json();
+      return atualizarPedidoLocalComDTO(dto, id);
+    },
+    [authHeaders, atualizarPedidoLocalComDTO]
+  );
+
+  const estornarPedido = useCallback(
+    async (id: string, motivo: string): Promise<Pedido> => {
+      const res = await fetch(
+        `/api/pedidos/pagamentos/pedido/${id}/estornar?motivo=${encodeURIComponent(motivo)}`,
+        {
+          method: 'POST',
+          headers: authHeaders(),
+        }
+      );
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `Erro ao estornar pagamento (${res.status}).`);
+      }
+
+      const dto: PedidoBackendDTO = await res.json();
+      return atualizarPedidoLocalComDTO(dto, id);
+    },
+    [authHeaders, atualizarPedidoLocalComDTO]
   );
 
   const atualizarEntrega = (id: string, motorista: string, veiculo: string, status: StatusEntrega) => {
@@ -280,6 +345,8 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
         setPedidoAtivo,
         criarPedido,
         buscarPedidoBackend,
+        cancelarPedido,
+        estornarPedido,
         atualizarEntrega,
         obterPedido,
       }}

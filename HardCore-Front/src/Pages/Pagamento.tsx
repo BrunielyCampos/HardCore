@@ -53,15 +53,14 @@ export default function Pagamento() {
   const iniciouGeracaoRef = useRef(false);
   const redirecionouRef = useRef(false);
 
-  const avancarParaConfirmacao = useCallback(
-    (idPedido: string) => {
-      if (redirecionouRef.current) return;
-      redirecionouRef.current = true;
-      setPedidoAtivo(null);
-      navigate(`/confirmacao/${idPedido}`, { replace: true });
-    },
-    [navigate, setPedidoAtivo]
-  );
+const avancarParaConfirmacao = useCallback(
+  (idPedido: string) => {
+    if (redirecionouRef.current) return;
+    redirecionouRef.current = true;
+    navigate(`/confirmacao/${idPedido}`, { replace: true });
+  },
+  [navigate]
+);
 
   const consultarStatusDireto = useCallback(
     async (idPedido: string): Promise<boolean> => {
