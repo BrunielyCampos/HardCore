@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsuarioClient.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.hardcore.pedidos.integracao</a> &gt; <span class="el_source">UsuarioClient.java</span></div><h1>UsuarioClient.java</h1><pre class="source lang-java linenums">package com.hardcore.pedidos.integracao;
+
+import com.hardcore.pedidos.security.ServiceTokenService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
+
+@Component
+public class UsuarioClient {
+
+    private final RestClient client;
+    private final ServiceTokenService tokenService;
+
+    public UsuarioClient(
+            @Value(&quot;${integracao.usuarios.url}&quot;) String url,
+<span class="fc" id="L17">            ServiceTokenService tokenService) {</span>
+
+<span class="fc" id="L19">        this.client = RestClient.builder()</span>
+<span class="fc" id="L20">                .baseUrl(url)</span>
+<span class="fc" id="L21">                .build();</span>
+
+<span class="fc" id="L23">        this.tokenService = tokenService;</span>
+<span class="fc" id="L24">    }</span>
+
+    public boolean validarEntregador(Long id) {
+<span class="nc" id="L27">        return client.get()</span>
+<span class="nc" id="L28">                .uri(&quot;/usuarios/{id}/validar-entregador&quot;, id)</span>
+<span class="nc" id="L29">                .header(</span>
+                    HttpHeaders.AUTHORIZATION,
+<span class="nc" id="L31">                    &quot;Bearer &quot; + tokenService.gerarTokenInterno()</span>
+                )
+<span class="nc" id="L33">                .retrieve()</span>
+<span class="nc" id="L34">                .body(Boolean.class);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.16.202610240946</span></div></body></html>

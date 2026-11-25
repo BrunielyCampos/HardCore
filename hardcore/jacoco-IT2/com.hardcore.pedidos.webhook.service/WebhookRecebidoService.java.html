@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebhookRecebidoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.hardcore.pedidos.webhook.service</a> &gt; <span class="el_source">WebhookRecebidoService.java</span></div><h1>WebhookRecebidoService.java</h1><pre class="source lang-java linenums">package com.hardcore.pedidos.webhook.service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hardcore.pedidos.pedido.model.EstadoPagamentoEnum;
+import com.hardcore.pedidos.pedido.model.Pedido;
+import com.hardcore.pedidos.pedido.repository.PedidoRepository;
+import com.hardcore.pedidos.integracao.ProdutoClient;
+import com.hardcore.pedidos.itempedido.model.ItemPedido;
+import com.hardcore.pedidos.itempedido.repository.ItemPedidoRepository;
+import com.hardcore.pedidos.rabbitmq.PedidoPagoEvent;
+import com.hardcore.pedidos.rabbitmq.PedidoPagoProducer;
+import com.hardcore.pedidos.webhook.model.WebhookRecebido;
+import com.hardcore.pedidos.webhook.repository.WebhookRecebidoRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.io.IOException;
+
+@Service
+@RequiredArgsConstructor
+public class WebhookRecebidoService {
+
+    private final ObjectMapper objectMapper;
+    private final PedidoRepository pedidoRepository;
+    private final WebhookRecebidoRepository webhookRepository;
+    private final PedidoPagoProducer pedidoPagoProducer;
+    private final ProdutoClient produtoClient;
+    private final ItemPedidoRepository itemPedidoRepository;
+
+    @Transactional
+    public void processarEvento(byte[] corpo) throws IOException {
+<span class="nc" id="L33">        JsonNode evento = objectMapper.readTree(corpo);</span>
+<span class="nc" id="L34">        String idEvento = evento.path(&quot;id&quot;).asText(null);</span>
+<span class="nc" id="L35">        String tipoEvento = evento.path(&quot;event&quot;).asText(null);</span>
+
+<span class="nc bnc" id="L37" title="All 4 branches missed.">        if (idEvento == null || tipoEvento == null) {</span>
+<span class="nc" id="L38">            throw new IllegalArgumentException(&quot;Evento inválido: id ou event ausente.&quot;);</span>
+        }
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        if (webhookRepository.existsById(idEvento)) {</span>
+<span class="nc" id="L41">            return;</span>
+        }
+
+<span class="nc bnc" id="L44" title="All 5 branches missed.">        EstadoPagamentoEnum novoEstado = switch (tipoEvento) {</span>
+<span class="nc" id="L45">            case &quot;checkout.completed&quot; -&gt; EstadoPagamentoEnum.PAGO;</span>
+<span class="nc" id="L46">            case &quot;checkout.refunded&quot; -&gt; EstadoPagamentoEnum.ESTORNADO;</span>
+<span class="nc" id="L47">            case &quot;checkout.disputed&quot; -&gt; EstadoPagamentoEnum.EM_DISPUTA;</span>
+<span class="nc" id="L48">            case &quot;checkout.lost&quot; -&gt; EstadoPagamentoEnum.FALHOU;</span>
+<span class="nc" id="L49">            default -&gt; null;</span>
+        };
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        if (novoEstado == null) {</span>
+<span class="nc" id="L52">            return;</span>
+        }
+
+<span class="nc" id="L55">        JsonNode checkout = evento.path(&quot;data&quot;).path(&quot;checkout&quot;);</span>
+<span class="nc" id="L56">        String checkoutId = checkout.path(&quot;id&quot;).asText(null);</span>
+<span class="nc" id="L57">        String externalId = checkout.path(&quot;externalId&quot;).asText(null);</span>
+
+<span class="nc" id="L59">        Pedido pedido = null;</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        if (checkoutId != null) {</span>
+<span class="nc" id="L61">            pedido = pedidoRepository.findByAbacatePayCheckoutId(checkoutId).orElse(null);</span>
+        }
+<span class="nc bnc" id="L63" title="All 6 branches missed.">        if (pedido == null &amp;&amp; externalId != null &amp;&amp; externalId.startsWith(&quot;pedido-&quot;)) {</span>
+            try {
+<span class="nc" id="L65">                Long pedidoId = Long.parseLong(externalId.substring(&quot;pedido-&quot;.length()));</span>
+<span class="nc" id="L66">                pedido = pedidoRepository.findById(pedidoId).orElse(null);</span>
+<span class="nc" id="L67">            } catch (NumberFormatException ignored) {</span>
+<span class="nc" id="L68">            }</span>
+        }
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (pedido == null) {</span>
+<span class="nc" id="L71">            throw new IllegalStateException(&quot;Não foi possível localizar o pedido do evento &quot; + idEvento);</span>
+        }
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (pedido.getEstadoPagamento() != EstadoPagamentoEnum.ESTORNADO</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">                &amp;&amp; pedido.getEstadoPagamento() != EstadoPagamentoEnum.CANCELADO) {</span>
+<span class="nc" id="L76">            pedido.setEstadoPagamento(novoEstado);</span>
+<span class="nc bnc" id="L77" title="All 6 branches missed.">            if (novoEstado == EstadoPagamentoEnum.ESTORNADO || novoEstado == EstadoPagamentoEnum.FALHOU</span>
+                    || novoEstado == EstadoPagamentoEnum.CANCELADO) {
+<span class="nc" id="L79">                liberarEstoque(pedido);</span>
+            }
+<span class="nc" id="L81">            pedidoRepository.save(pedido);</span>
+<span class="nc bnc" id="L82" title="All 4 branches missed.">            if (novoEstado == EstadoPagamentoEnum.PAGO &amp;&amp; pedido.getIdEntregador() != null) {</span>
+<span class="nc" id="L83">                pedidoPagoProducer.publicar(new PedidoPagoEvent(pedido.getId(), pedido.getIdCliente(), pedido.getIdEntregador()));</span>
+            }
+        }
+
+<span class="nc" id="L87">        webhookRepository.saveAndFlush(new WebhookRecebido(idEvento, tipoEvento));</span>
+<span class="nc" id="L88">    }</span>
+
+    private void liberarEstoque(Pedido pedido) {
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (!Boolean.TRUE.equals(pedido.getEstoqueBaixado())) {</span>
+<span class="nc" id="L92">            return;</span>
+        }
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        for (ItemPedido item : itemPedidoRepository.findByIdPedido(pedido.getId())) {</span>
+<span class="nc" id="L95">            produtoClient.liberarEstoque(item.getIdProduto(), item.getQuantidade());</span>
+<span class="nc" id="L96">        }</span>
+<span class="nc" id="L97">        pedido.setEstoqueBaixado(false);</span>
+<span class="nc" id="L98">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.16.202610240946</span></div></body></html>

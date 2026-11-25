@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CarrinhoMapperImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.hardcore.pedidos.carrinho.mapper</a> &gt; <span class="el_source">CarrinhoMapperImpl.java</span></div><h1>CarrinhoMapperImpl.java</h1><pre class="source lang-java linenums">package com.hardcore.pedidos.carrinho.mapper;
+
+import com.hardcore.pedidos.carrinho.dto.CarrinhoRequestDTO;
+import com.hardcore.pedidos.carrinho.dto.CarrinhoResponseDTO;
+import com.hardcore.pedidos.carrinho.model.Carrinho;
+import javax.annotation.processing.Generated;
+import org.springframework.stereotype.Component;
+
+@Generated(
+    value = &quot;org.mapstruct.ap.MappingProcessor&quot;,
+    date = &quot;2026-11-23T22:21:18-0300&quot;,
+    comments = &quot;version: 1.5.5.Final, compiler: javac, environment: Java 25 (Oracle Corporation)&quot;
+)
+@Component
+<span class="fc" id="L15">public class CarrinhoMapperImpl implements CarrinhoMapper {</span>
+
+    @Override
+    public Carrinho toEntity(CarrinhoRequestDTO dto) {
+<span class="nc bnc" id="L19" title="All 2 branches missed.">        if ( dto == null ) {</span>
+<span class="nc" id="L20">            return null;</span>
+        }
+
+<span class="nc" id="L23">        Carrinho carrinho = new Carrinho();</span>
+
+<span class="nc" id="L25">        carrinho.setIdCliente( dto.getIdCliente() );</span>
+
+<span class="nc" id="L27">        return carrinho;</span>
+    }
+
+    @Override
+    public CarrinhoResponseDTO toDTO(Carrinho carrinho) {
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        if ( carrinho == null ) {</span>
+<span class="nc" id="L33">            return null;</span>
+        }
+
+<span class="nc" id="L36">        CarrinhoResponseDTO carrinhoResponseDTO = new CarrinhoResponseDTO();</span>
+
+<span class="nc" id="L38">        carrinhoResponseDTO.setId( carrinho.getId() );</span>
+<span class="nc" id="L39">        carrinhoResponseDTO.setIdCliente( carrinho.getIdCliente() );</span>
+
+<span class="nc" id="L41">        return carrinhoResponseDTO;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.16.202610240946</span></div></body></html>

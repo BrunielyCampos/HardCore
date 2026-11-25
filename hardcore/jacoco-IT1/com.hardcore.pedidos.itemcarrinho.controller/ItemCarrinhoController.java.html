@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ItemCarrinhoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.hardcore.pedidos.itemcarrinho.controller</a> &gt; <span class="el_source">ItemCarrinhoController.java</span></div><h1>ItemCarrinhoController.java</h1><pre class="source lang-java linenums">package com.hardcore.pedidos.itemcarrinho.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import com.hardcore.pedidos.itemcarrinho.dto.ItemCarrinhoRequestDTO;
+import com.hardcore.pedidos.itemcarrinho.dto.ItemCarrinhoResponseDTO;
+import com.hardcore.pedidos.itemcarrinho.routes.RotasItemCarrinho;
+import com.hardcore.pedidos.itemcarrinho.service.ItemCarrinhoService;
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+public class ItemCarrinhoController {
+
+    private final ItemCarrinhoService itemCarrinhoService;
+
+    @PostMapping(RotasItemCarrinho.ADICIONAR)
+    public ResponseEntity&lt;ItemCarrinhoResponseDTO&gt; adicionarItem(@RequestBody @Valid ItemCarrinhoRequestDTO requestDTO, Authentication authentication) {
+<span class="nc" id="L24">        Long idUsuario = obterIdUsuario(authentication);</span>
+<span class="nc" id="L25">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="nc" id="L26">                .body(itemCarrinhoService.adicionarItem(requestDTO, idUsuario));</span>
+    }
+
+    @GetMapping(RotasItemCarrinho.LISTAR_POR_CARRINHO)
+    public ResponseEntity&lt;List&lt;ItemCarrinhoResponseDTO&gt;&gt; listarPorCarrinho(
+            @PathVariable Long idCarrinho,
+            Authentication authentication
+    ) {
+<span class="nc" id="L34">        Long idUsuario = obterIdUsuario(authentication);</span>
+
+<span class="nc" id="L36">        return ResponseEntity.ok(</span>
+<span class="nc" id="L37">                itemCarrinhoService.listarItensPorCarrinho(idCarrinho, idUsuario)</span>
+        );
+    }
+
+    @DeleteMapping(RotasItemCarrinho.DELETAR)
+    public ResponseEntity&lt;Void&gt; removerItem(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+<span class="nc" id="L46">        Long idUsuario = obterIdUsuario(authentication);</span>
+
+<span class="nc" id="L48">        itemCarrinhoService.removerItem(id, idUsuario);</span>
+
+<span class="nc" id="L50">        return ResponseEntity.noContent().build();</span>
+    }
+
+    private Long obterIdUsuario(Authentication authentication) {
+
+<span class="nc" id="L55">        Object details = authentication.getDetails();</span>
+
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        if (details instanceof Long) {</span>
+<span class="nc" id="L58">            return (Long) details;</span>
+        }
+
+<span class="nc" id="L61">        throw new AccessDeniedException(</span>
+                &quot;Não foi possível identificar o usuário autenticado.&quot;
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.16.202610240946</span></div></body></html>

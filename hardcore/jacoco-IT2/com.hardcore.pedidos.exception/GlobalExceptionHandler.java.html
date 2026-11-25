@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GlobalExceptionHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.hardcore.pedidos.exception</a> &gt; <span class="el_source">GlobalExceptionHandler.java</span></div><h1>GlobalExceptionHandler.java</h1><pre class="source lang-java linenums">package com.hardcore.pedidos.exception;
+
+import com.hardcore.pedidos.pedido.exception.PedidoNaoEncontradoException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
+import java.time.LocalDateTime;
+import java.util.Map;
+
+@RestControllerAdvice
+<span class="fc" id="L17">public class GlobalExceptionHandler {</span>
+
+<span class="fc" id="L19">    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);</span>
+
+    private ResponseEntity&lt;Map&lt;String, Object&gt;&gt; criarResposta(HttpStatus status, String mensagem) {
+<span class="nc" id="L22">        return ResponseEntity.status(status).body(Map.of(</span>
+<span class="nc" id="L23">                &quot;status&quot;, status.value(),</span>
+<span class="nc" id="L24">                &quot;erro&quot;, status.getReasonPhrase(),</span>
+                &quot;mensagem&quot;, mensagem,
+<span class="nc" id="L26">                &quot;dataHora&quot;, LocalDateTime.now().toString()</span>
+        ));
+    }
+
+    @ExceptionHandler(PedidoNaoEncontradoException.class)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; tratarPedidoNaoEncontrado(PedidoNaoEncontradoException ex) {
+<span class="nc" id="L32">        return criarResposta(HttpStatus.NOT_FOUND, ex.getMessage());</span>
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; tratarValidacao(MethodArgumentNotValidException ex) {
+
+<span class="nc" id="L38">        String mensagem = ex.getBindingResult()</span>
+<span class="nc" id="L39">                .getFieldErrors()</span>
+<span class="nc" id="L40">                .stream()</span>
+<span class="nc" id="L41">                .map(erro -&gt; erro.getField() + &quot;: &quot; + erro.getDefaultMessage())</span>
+<span class="nc" id="L42">                .findFirst()</span>
+<span class="nc" id="L43">                .orElse(&quot;Dados inválidos.&quot;);</span>
+
+<span class="nc" id="L45">        return criarResposta(HttpStatus.BAD_REQUEST, mensagem);</span>
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; tratarStatus(ResponseStatusException ex) {
+
+<span class="nc" id="L51">        HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());</span>
+
+<span class="nc bnc" id="L53" title="All 2 branches missed.">        return criarResposta(status, ex.getReason() != null</span>
+<span class="nc" id="L54">                ? ex.getReason()</span>
+<span class="nc" id="L55">                : &quot;Ocorreu um erro na requisição.&quot;);</span>
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; tratarIntegridade(DataIntegrityViolationException ex) {
+<span class="nc" id="L60">        return criarResposta(</span>
+                HttpStatus.CONFLICT,
+                &quot;Não foi possível realizar a operação devido a uma restrição dos dados.&quot;
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; tratarErroGeral(Exception ex) {
+    
+<span class="nc" id="L69">        log.error(&quot;Erro interno ao processar requisição:&quot;, ex);</span>
+    
+<span class="nc" id="L71">        return criarResposta(</span>
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                &quot;Ocorreu um erro interno no servidor.&quot;
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.16.202610240946</span></div></body></html>

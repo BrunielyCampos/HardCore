@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PedidoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.hardcore.pedidos.pedido.service</a> &gt; <span class="el_source">PedidoService.java</span></div><h1>PedidoService.java</h1><pre class="source lang-java linenums">package com.hardcore.pedidos.pedido.service;
+
+import com.hardcore.pedidos.integracao.UsuarioClient;
+import com.hardcore.pedidos.pedido.dto.PedidoRequestDTO;
+import com.hardcore.pedidos.pedido.dto.PedidoResponseDTO;
+import com.hardcore.pedidos.pedido.exception.PedidoNaoEncontradoException;
+import com.hardcore.pedidos.pedido.mapper.PedidoMapper;
+import com.hardcore.pedidos.pedido.model.EstadoCompraEnum;
+import com.hardcore.pedidos.pedido.model.EstadoPagamentoEnum;
+import com.hardcore.pedidos.pedido.model.Pedido;
+import com.hardcore.pedidos.pedido.repository.PedidoRepository;
+import com.hardcore.pedidos.rabbitmq.PedidoPagoEvent;
+import com.hardcore.pedidos.rabbitmq.PedidoPagoProducer;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class PedidoService {
+    private final PedidoMapper pedidoMapper;
+    private final PedidoRepository pedidoRepository;
+    private final UsuarioClient usuarioClient;
+    private final PedidoPagoProducer pedidoPagoProducer;
+
+    @Transactional
+    public PedidoResponseDTO criarPedido(PedidoRequestDTO requestDTO) {
+
+        Authentication autenticacao =
+<span class="nc" id="L36">                SecurityContextHolder.getContext().getAuthentication();</span>
+
+<span class="nc bnc" id="L38" title="All 4 branches missed.">        if (autenticacao == null || !autenticacao.isAuthenticated()) {</span>
+<span class="nc" id="L39">            throw new ResponseStatusException(</span>
+                    HttpStatus.UNAUTHORIZED,
+                    &quot;Autenticação necessária.&quot;
+            );
+        }
+
+<span class="nc" id="L45">        Object usuarioId = autenticacao.getDetails();</span>
+
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        if (!(usuarioId instanceof Long)) {</span>
+<span class="nc" id="L48">            throw new ResponseStatusException(</span>
+                    HttpStatus.FORBIDDEN,
+                    &quot;Não foi possível identificar o cliente autenticado.&quot;
+            );
+        }
+
+<span class="nc" id="L54">        Long idClienteAutenticado = (Long) usuarioId;</span>
+
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (!idClienteAutenticado.equals(requestDTO.getIdCliente())) {</span>
+<span class="nc" id="L57">            throw new ResponseStatusException(</span>
+                    HttpStatus.FORBIDDEN,
+                    &quot;Você só pode criar pedidos em seu próprio nome.&quot;
+            );
+        }
+
+<span class="nc" id="L63">        Pedido pedido = pedidoMapper.toEntity(requestDTO);</span>
+
+<span class="nc" id="L65">        pedido.setId(null);</span>
+<span class="nc" id="L66">        pedido.setIdCliente(idClienteAutenticado);</span>
+<span class="nc" id="L67">        pedido.setIdEntregador(null);</span>
+
+<span class="nc" id="L69">        Pedido salvo = pedidoRepository.save(pedido);</span>
+
+<span class="nc" id="L71">        return pedidoMapper.toDTO(salvo);</span>
+    }
+
+    public PedidoResponseDTO buscarPedidoPorId(Long id) {
+<span class="nc" id="L75">        Pedido pedido = buscar(id);</span>
+<span class="nc" id="L76">        return pedidoMapper.toDTO(pedido);</span>
+    }
+
+    public List&lt;PedidoResponseDTO&gt; listarPedidosPorCliente(Long idCliente) {
+<span class="nc" id="L80">        return pedidoRepository.findByIdCliente(idCliente).stream()</span>
+<span class="nc" id="L81">            .map(pedidoMapper::toDTO)</span>
+<span class="nc" id="L82">            .collect(Collectors.toList());</span>
+    }
+
+    @Transactional
+    public void atualizarStatus(Long id, EstadoCompraEnum novoEstado) {
+<span class="nc" id="L87">        Pedido pedido = buscar(id);</span>
+<span class="nc" id="L88">        pedido.setEstado(novoEstado);</span>
+<span class="nc" id="L89">        pedidoRepository.save(pedido);</span>
+<span class="nc" id="L90">    }</span>
+
+    @Transactional
+    public void cancelarPedido(Long id) {
+<span class="nc" id="L94">        Pedido pedido = buscar(id);</span>
+<span class="nc" id="L95">        pedido.setEstado(EstadoCompraEnum.COMPRA_CANCELADA);</span>
+<span class="nc" id="L96">        pedidoRepository.save(pedido);</span>
+<span class="nc" id="L97">    }</span>
+
+    @Transactional
+    public PedidoResponseDTO atribuirEntregador(Long idPedido, Long idEntregador) {
+
+<span class="nc" id="L102">        Pedido pedido = buscar(idPedido);</span>
+
+<span class="nc" id="L104">        boolean ehEntregador = usuarioClient.validarEntregador(idEntregador);</span>
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (!ehEntregador) {</span>
+<span class="nc" id="L107">            throw new ResponseStatusException(</span>
+                    HttpStatus.BAD_REQUEST,
+                    &quot;O usuário informado não possui perfil de ENTREGADOR.&quot;
+            );
+        }
+
+<span class="nc" id="L113">        pedido.setIdEntregador(idEntregador);</span>
+
+<span class="nc" id="L115">        Pedido salvo = pedidoRepository.save(pedido);</span>
+
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (salvo.getEstadoPagamento() == EstadoPagamentoEnum.PAGO) {</span>
+<span class="nc" id="L118">            pedidoPagoProducer.publicar(</span>
+                    new PedidoPagoEvent(
+<span class="nc" id="L120">                            salvo.getId(),</span>
+<span class="nc" id="L121">                            salvo.getIdCliente(),</span>
+<span class="nc" id="L122">                            salvo.getIdEntregador()</span>
+                    )
+            );
+        }
+
+<span class="nc" id="L127">        return pedidoMapper.toDTO(salvo);</span>
+    }
+
+    private Pedido buscar(Long id) {
+<span class="nc" id="L131">        return pedidoRepository.findById(id)</span>
+<span class="nc" id="L132">                .orElseThrow(() -&gt; new PedidoNaoEncontradoException(&quot;Pedido não encontrado com o ID: &quot; + id));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.16.202610240946</span></div></body></html>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.hardcore.pedidos.config</a> &gt; <span class="el_source">SecurityConfig.java</span></div><h1>SecurityConfig.java</h1><pre class="source lang-java linenums">package com.hardcore.pedidos.config;
+
+import com.hardcore.pedidos.security.JwtAuthenticationFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtFilter;
+
+<span class="fc" id="L20">    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {</span>
+<span class="fc" id="L21">        this.jwtFilter = jwtFilter;</span>
+<span class="fc" id="L22">    }</span>
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+<span class="fc" id="L26">        return http</span>
+<span class="fc" id="L27">                .csrf(csrf -&gt; csrf.disable())</span>
+<span class="fc" id="L28">                .sessionManagement(session -&gt;</span>
+<span class="fc" id="L29">                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))</span>
+<span class="fc" id="L30">                .authorizeHttpRequests(auth -&gt; auth</span>
+
+<span class="fc" id="L32">                        .requestMatchers(&quot;/webhooks/abacatepay&quot;, &quot;/error&quot;)</span>
+<span class="fc" id="L33">                        .permitAll()</span>
+
+<span class="fc" id="L35">                        .requestMatchers(HttpMethod.POST, &quot;/pagamentos/webhook/registrar&quot;)</span>
+<span class="fc" id="L36">                        .hasAuthority(&quot;ROLE_ADMIN&quot;)</span>
+
+<span class="fc" id="L38">                        .requestMatchers(HttpMethod.POST, &quot;/pedidos/criar&quot;)</span>
+<span class="fc" id="L39">                        .authenticated()</span>
+
+<span class="fc" id="L41">                        .requestMatchers(HttpMethod.GET,</span>
+                                &quot;/pedidos/*&quot;,
+                                &quot;/pedidos/cliente/*&quot;)
+<span class="fc" id="L44">                        .authenticated()</span>
+
+<span class="fc" id="L46">                        .requestMatchers(HttpMethod.GET,</span>
+                                &quot;/carrinho/cliente/*&quot;)
+<span class="fc" id="L48">                        .hasAuthority(&quot;ROLE_GERENTE&quot;)</span>
+
+<span class="fc" id="L50">                        .requestMatchers(</span>
+                                &quot;/pedidos/*/status&quot;,
+                                &quot;/pedidos/*/entregador&quot;)
+<span class="fc" id="L53">                        .hasAuthority(&quot;ROLE_GERENTE&quot;)</span>
+
+<span class="fc" id="L55">                        .requestMatchers(&quot;/itens-pedido/**&quot;).authenticated()</span>
+
+<span class="fc" id="L57">                        .anyRequest()</span>
+<span class="fc" id="L58">                        .authenticated()</span>
+                )
+<span class="fc" id="L60">                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)</span>
+<span class="fc" id="L61">                .build();</span>
+    }
+
+    @Bean
+    public FilterRegistrationBean&lt;JwtAuthenticationFilter&gt; jwtFilterRegistration(
+            JwtAuthenticationFilter filter) {
+
+<span class="fc" id="L68">        FilterRegistrationBean&lt;JwtAuthenticationFilter&gt; registration =</span>
+                new FilterRegistrationBean&lt;&gt;(filter);
+
+<span class="fc" id="L71">        registration.setEnabled(false);</span>
+<span class="fc" id="L72">        return registration;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.16.202610240946</span></div></body></html>

@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PagamentoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.hardcore.pedidos.abacatepayapi.service</a> &gt; <span class="el_source">PagamentoService.java</span></div><h1>PagamentoService.java</h1><pre class="source lang-java linenums">package com.hardcore.pedidos.abacatepayapi.service;
+
+import tools.jackson.databind.JsonNode;
+import com.hardcore.pedidos.abacatepayapi.dto.CriarCheckoutDTO;
+import com.hardcore.pedidos.integracao.ProdutoClient;
+import com.hardcore.pedidos.itempedido.model.ItemPedido;
+import com.hardcore.pedidos.itempedido.repository.ItemPedidoRepository;
+import com.hardcore.pedidos.pedido.dto.PedidoResponseDTO;
+import com.hardcore.pedidos.pedido.exception.PedidoNaoEncontradoException;
+import com.hardcore.pedidos.pedido.mapper.PedidoMapper;
+import com.hardcore.pedidos.pedido.model.EstadoCompraEnum;
+import com.hardcore.pedidos.pedido.model.EstadoPagamentoEnum;
+import com.hardcore.pedidos.pedido.model.Pedido;
+import com.hardcore.pedidos.pedido.model.TipoPagamentoEnum;
+import com.hardcore.pedidos.pedido.repository.PedidoRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+@Service
+@RequiredArgsConstructor
+public class PagamentoService {
+    private final AbacatePayService abacatePayService;
+    private final PedidoRepository pedidoRepository;
+    private final PedidoMapper pedidoMapper;
+    private final ProdutoClient produtoClient;
+    private final ItemPedidoRepository itemPedidoRepository;
+
+    @Value(&quot;${abacatepay.webhook.secret}&quot;)
+    private String webhookSecret;
+    @Value(&quot;${abacatepay.webhook.endpoint:}&quot;)
+    private String webhookEndpoint;
+
+    @Transactional
+    public PedidoResponseDTO criarCheckout(CriarCheckoutDTO dto) {
+<span class="fc" id="L46">        Pedido pedido = buscarPedido(dto.pedidoId());</span>
+<span class="fc" id="L47">        validarAcessoAoPedido(pedido);</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        if (pedido.getEstadoPagamento() != EstadoPagamentoEnum.PENDENTE) {</span>
+<span class="nc" id="L49">            throw new ResponseStatusException(HttpStatus.CONFLICT, &quot;Só é possível criar checkout para pagamento pendente.&quot;);</span>
+        }
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">        if (pedido.getAbacatePayCheckoutId() != null) {</span>
+<span class="nc" id="L52">            throw new ResponseStatusException(HttpStatus.CONFLICT, &quot;Este pedido já possui um checkout.&quot;);</span>
+        }
+
+<span class="fc" id="L55">        List&lt;Map&lt;String, Object&gt;&gt; itensCheckout = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L56">        List&lt;ItemPedido&gt; itensPedido = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L57">        BigDecimal total = BigDecimal.ZERO;</span>
+
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        for (var item : dto.itens()) {</span>
+            Long produtoId;
+            try {
+<span class="fc" id="L62">                produtoId = Long.valueOf(item.id());</span>
+<span class="nc" id="L63">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L64">                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,</span>
+                        &quot;O campo id de cada item deve ser o ID numérico do produto no microsserviço Produtos.&quot;);
+<span class="fc" id="L66">            }</span>
+
+<span class="fc" id="L68">            JsonNode produto = produtoClient.buscarPorId(produtoId);</span>
+<span class="pc bpc" id="L69" title="2 of 4 branches missed.">            if (produto == null || produto.path(&quot;id&quot;).isMissingNode()) {</span>
+<span class="nc" id="L70">                throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;Produto não encontrado: &quot; + produtoId);</span>
+            }
+<span class="fc" id="L72">            String nome = produto.path(&quot;nome&quot;).asString(&quot;Produto &quot; + produtoId);</span>
+<span class="fc" id="L73">            BigDecimal preco = BigDecimal.valueOf(produto.path(&quot;preco&quot;).asDouble());</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">            if (preco.signum() &lt;= 0) {</span>
+<span class="nc" id="L75">                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Produto sem preço válido: &quot; + produtoId);</span>
+            }
+            int precoCentavos;
+            try {
+<span class="fc" id="L79">                precoCentavos = preco.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).intValueExact();</span>
+<span class="nc" id="L80">            } catch (ArithmeticException e) {</span>
+<span class="nc" id="L81">                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Preço do produto fora do limite aceito.&quot;);</span>
+<span class="fc" id="L82">            }</span>
+
+<span class="fc" id="L84">            String externalId = &quot;hardcore-produto-&quot; + produtoId + &quot;-&quot; + precoCentavos;</span>
+<span class="fc" id="L85">            JsonNode respostaProduto = abacatePayService.buscarProdutoPorExternalId(externalId);</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">            JsonNode dadosProduto = respostaProduto == null ? null : validarResposta(respostaProduto);</span>
+<span class="pc bpc" id="L87" title="2 of 4 branches missed.">            if (dadosProduto == null || dadosProduto.path(&quot;id&quot;).asString(null) == null) {</span>
+<span class="nc" id="L88">                dadosProduto = validarResposta(abacatePayService.criarProduto(externalId, nome, precoCentavos));</span>
+            }
+<span class="fc" id="L90">            String idProdutoAbacate = dadosProduto.path(&quot;id&quot;).asString(null);</span>
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">            if (idProdutoAbacate == null) {</span>
+<span class="nc" id="L92">                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, &quot;AbacatePay não retornou o ID do produto cadastrado.&quot;);</span>
+            }
+
+<span class="fc" id="L95">            itensCheckout.add(Map.of(&quot;id&quot;, idProdutoAbacate, &quot;quantity&quot;, item.quantity()));</span>
+<span class="fc" id="L96">            itensPedido.add(new ItemPedido(null, pedido.getId(), pedido, produtoId, item.quantity(), preco.doubleValue()));</span>
+<span class="fc" id="L97">            total = total.add(preco.multiply(BigDecimal.valueOf(item.quantity())));</span>
+<span class="fc" id="L98">        }</span>
+
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">        if (total.signum() &lt;= 0) {</span>
+<span class="nc" id="L101">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;O valor total do pedido deve ser maior que zero.&quot;);</span>
+        }
+
+<span class="fc" id="L104">        pedido.setValorCompra(total.setScale(2, RoundingMode.HALF_UP).doubleValue());</span>
+<span class="fc" id="L105">        List&lt;ItemPedido&gt; reservasAplicadas = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L106">        String checkoutIdCriado = null;</span>
+        try {
+<span class="fc bfc" id="L108" title="All 2 branches covered.">            for (ItemPedido item : itensPedido) {</span>
+<span class="fc" id="L109">                produtoClient.reservarEstoque(item.getIdProduto(), item.getQuantidade());</span>
+<span class="fc" id="L110">                reservasAplicadas.add(item);</span>
+<span class="fc" id="L111">            }</span>
+
+<span class="fc" id="L113">            pedido.setEstoqueBaixado(true);</span>
+<span class="fc" id="L114">            pedidoRepository.save(pedido);</span>
+<span class="fc" id="L115">            itemPedidoRepository.deleteAll(itemPedidoRepository.findByIdPedido(pedido.getId()));</span>
+<span class="fc" id="L116">            itemPedidoRepository.saveAll(itensPedido);</span>
+
+<span class="fc" id="L118">            String externalIdPedido = &quot;pedido-&quot; + pedido.getId();</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">            List&lt;String&gt; methods = pedido.getTipoPagamento() == TipoPagamentoEnum.PIX</span>
+<span class="pc" id="L120">                    ? List.of(&quot;PIX&quot;) : List.of(&quot;CARD&quot;);</span>
+<span class="fc" id="L121">            JsonNode data = validarResposta(abacatePayService.criarCheckout(itensCheckout, externalIdPedido, methods));</span>
+<span class="fc" id="L122">            checkoutIdCriado = data.path(&quot;id&quot;).asString(null);</span>
+<span class="fc" id="L123">            String url = data.path(&quot;url&quot;).asString(null);</span>
+<span class="pc bpc" id="L124" title="2 of 4 branches missed.">            if (checkoutIdCriado == null || url == null) {</span>
+<span class="nc" id="L125">                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, &quot;A AbacatePay não retornou o ID e a URL do checkout.&quot;);</span>
+            }
+<span class="fc" id="L127">            pedido.setAbacatePayCheckoutId(checkoutIdCriado);</span>
+<span class="fc" id="L128">            pedido.setUrlPagamento(url);</span>
+<span class="fc" id="L129">            pedidoRepository.save(pedido);</span>
+<span class="fc" id="L130">            return pedidoMapper.toDTO(pedido);</span>
+<span class="nc" id="L131">        } catch (RuntimeException erro) {</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">            if (checkoutIdCriado != null) {</span>
+<span class="nc" id="L133">                try { abacatePayService.cancelarCheckout(checkoutIdCriado); } catch (RuntimeException ignored) { }</span>
+            }
+<span class="nc bnc" id="L135" title="All 2 branches missed.">            for (ItemPedido item : reservasAplicadas) {</span>
+<span class="nc" id="L136">                try { produtoClient.liberarEstoque(item.getIdProduto(), item.getQuantidade()); }</span>
+<span class="nc" id="L137">                catch (RuntimeException falhaLiberacao) { erro.addSuppressed(falhaLiberacao); }</span>
+<span class="nc" id="L138">            }</span>
+<span class="nc" id="L139">            pedido.setEstoqueBaixado(false);</span>
+<span class="nc" id="L140">            throw erro;</span>
+        }
+    }
+
+    public JsonNode consultarCheckoutDoPedido(Long pedidoId) {
+<span class="nc" id="L145">        Pedido pedido = buscarPedido(pedidoId);</span>
+<span class="nc" id="L146">        validarAcessoAoPedido(pedido);</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        if (pedido.getAbacatePayCheckoutId() == null) {</span>
+<span class="nc" id="L148">            throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;O pedido ainda não possui checkout.&quot;);</span>
+        }
+<span class="nc" id="L150">        return abacatePayService.consultarCheckout(pedido.getAbacatePayCheckoutId());</span>
+    }
+
+    // @Transactional
+    // public PedidoResponseDTO cancelarPagamento(Long pedidoId) {
+    //     Pedido pedido = buscarPedido(pedidoId);
+    //     validarAcessoAoPedido(pedido);
+    //     if (pedido.getEstadoPagamento() == EstadoPagamentoEnum.ESTORNADO || pedido.getEstadoPagamento() == EstadoPagamentoEnum.CANCELADO) {
+    //         return pedidoMapper.toDTO(pedido);
+    //     }
+    //     if (pedido.getEstadoPagamento() == EstadoPagamentoEnum.EM_DISPUTA) {
+    //         throw new ResponseStatusException(HttpStatus.CONFLICT, &quot;Pedido em disputa não pode ser cancelado automaticamente.&quot;);
+    //     }
+    //     if (pedido.getAbacatePayCheckoutId() != null) {
+    //         if (pedido.getEstadoPagamento() == EstadoPagamentoEnum.PAGO) {
+    //             validarResposta(abacatePayService.estornarCheckout(pedido.getAbacatePayCheckoutId(), &quot;Cancelamento do pedido &quot; + pedidoId));
+    //             pedido.setEstadoPagamento(EstadoPagamentoEnum.ESTORNADO);
+    //         } else {
+    //             validarResposta(abacatePayService.cancelarCheckout(pedido.getAbacatePayCheckoutId()));
+    //             pedido.setEstadoPagamento(EstadoPagamentoEnum.CANCELADO);
+    //         }
+    //     } else {
+    //         pedido.setEstadoPagamento(EstadoPagamentoEnum.CANCELADO);
+    //     }
+    //     liberarEstoque(pedido);
+    //     pedido.setEstado(EstadoCompraEnum.COMPRA_CANCELADA);
+    //     pedidoRepository.save(pedido);
+    //     return pedidoMapper.toDTO(pedido);
+    // }
+
+    @Transactional
+    public PedidoResponseDTO cancelarPagamento(Long pedidoId) {
+<span class="fc" id="L182">        Pedido pedido = buscarPedido(pedidoId);</span>
+<span class="fc" id="L183">        validarAcessoAoPedido(pedido);</span>
+
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">        if (pedido.getEstadoPagamento() == EstadoPagamentoEnum.ESTORNADO ||</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">            pedido.getEstadoPagamento() == EstadoPagamentoEnum.CANCELADO) {</span>
+<span class="nc" id="L187">            return pedidoMapper.toDTO(pedido);</span>
+        }
+
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">        if (pedido.getEstadoPagamento() == EstadoPagamentoEnum.EM_DISPUTA) {</span>
+<span class="nc" id="L191">            throw new ResponseStatusException(</span>
+                HttpStatus.CONFLICT,
+                &quot;Pedido em disputa não pode ser cancelado automaticamente.&quot;
+            );
+        }
+
+<span class="pc bpc" id="L197" title="1 of 2 branches missed.">        if (pedido.getEstadoPagamento() == EstadoPagamentoEnum.PAGO) {</span>
+<span class="nc" id="L198">            validarResposta(</span>
+<span class="nc" id="L199">                abacatePayService.estornarCheckout(</span>
+<span class="nc" id="L200">                    pedido.getAbacatePayCheckoutId(),</span>
+                    &quot;Cancelamento do pedido &quot; + pedidoId
+                )
+            );
+<span class="nc" id="L204">            pedido.setEstadoPagamento(EstadoPagamentoEnum.ESTORNADO);</span>
+        } else {
+<span class="fc" id="L206">            pedido.setEstadoPagamento(EstadoPagamentoEnum.CANCELADO);</span>
+        }
+
+<span class="fc" id="L209">        liberarEstoque(pedido);</span>
+<span class="fc" id="L210">        pedido.setEstado(EstadoCompraEnum.COMPRA_CANCELADA);</span>
+
+<span class="fc" id="L212">        pedidoRepository.save(pedido);</span>
+
+<span class="fc" id="L214">        return pedidoMapper.toDTO(pedido);</span>
+    }
+
+    @Transactional
+    public PedidoResponseDTO estornarPagamento(Long pedidoId, String motivo) {
+<span class="nc" id="L219">        Pedido pedido = buscarPedido(pedidoId);</span>
+<span class="nc" id="L220">        validarAcessoAoPedido(pedido);</span>
+<span class="nc bnc" id="L221" title="All 4 branches missed.">        if (pedido.getEstadoPagamento() != EstadoPagamentoEnum.PAGO || pedido.getAbacatePayCheckoutId() == null) {</span>
+<span class="nc" id="L222">            throw new ResponseStatusException(HttpStatus.CONFLICT, &quot;Só é possível estornar um pedido pago com checkout associado.&quot;);</span>
+        }
+<span class="nc" id="L224">        validarResposta(abacatePayService.estornarCheckout(pedido.getAbacatePayCheckoutId(), motivo));</span>
+<span class="nc" id="L225">        pedido.setEstadoPagamento(EstadoPagamentoEnum.ESTORNADO);</span>
+<span class="nc" id="L226">        liberarEstoque(pedido);</span>
+<span class="nc" id="L227">        pedido.setEstado(EstadoCompraEnum.COMPRA_CANCELADA);</span>
+<span class="nc" id="L228">        pedidoRepository.save(pedido);</span>
+<span class="nc" id="L229">        return pedidoMapper.toDTO(pedido);</span>
+    }
+
+    public JsonNode registrarWebhook(String endpoint) {
+<span class="nc bnc" id="L233" title="All 4 branches missed.">        if (webhookSecret == null || webhookSecret.isBlank()) {</span>
+<span class="nc" id="L234">            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, &quot;ABACATEPAY_WEBHOOK_SECRET não está configurado.&quot;);</span>
+        }
+<span class="nc bnc" id="L236" title="All 4 branches missed.">        String url = endpoint == null || endpoint.isBlank() ? webhookEndpoint : endpoint;</span>
+<span class="nc bnc" id="L237" title="All 6 branches missed.">        if (url == null || !(url.startsWith(&quot;https://&quot;) || url.startsWith(&quot;http://localhost&quot;))) {</span>
+<span class="nc" id="L238">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, &quot;Informe um endpoint HTTPS público ou localhost para testes.&quot;);</span>
+        }
+<span class="nc" id="L240">        return validarResposta(abacatePayService.registrarWebhook(url, webhookSecret));</span>
+    }
+
+    private void liberarEstoque(Pedido pedido) {
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">        if (!Boolean.TRUE.equals(pedido.getEstoqueBaixado())) {</span>
+<span class="nc" id="L245">            return;</span>
+        }
+<span class="fc bfc" id="L247" title="All 2 branches covered.">        for (ItemPedido item : itemPedidoRepository.findByIdPedido(pedido.getId())) {</span>
+<span class="fc" id="L248">            produtoClient.liberarEstoque(item.getIdProduto(), item.getQuantidade());</span>
+<span class="fc" id="L249">        }</span>
+<span class="fc" id="L250">        pedido.setEstoqueBaixado(false);</span>
+<span class="fc" id="L251">    }</span>
+
+    private Pedido buscarPedido(Long id) {
+<span class="pc" id="L254">        return pedidoRepository.findById(id).orElseThrow(() -&gt; new PedidoNaoEncontradoException(&quot;Pedido não encontrado com o ID: &quot; + id));</span>
+    }
+
+    private JsonNode validarResposta(JsonNode resposta) {
+<span class="pc bpc" id="L258" title="2 of 4 branches missed.">        if (resposta == null || !resposta.path(&quot;success&quot;).asBoolean(false)) {</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">            String erro = resposta == null ? &quot;Resposta vazia da AbacatePay&quot; : resposta.path(&quot;error&quot;).asString(&quot;A AbacatePay recusou a operação.&quot;);</span>
+<span class="nc" id="L260">            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, erro);</span>
+        }
+<span class="fc" id="L262">        return resposta.path(&quot;data&quot;);</span>
+    }
+
+    private void validarAcessoAoPedido(Pedido pedido) {
+        Authentication autenticacao =
+<span class="fc" id="L267">                SecurityContextHolder.getContext().getAuthentication();</span>
+
+<span class="pc bpc" id="L269" title="2 of 4 branches missed.">        if (autenticacao == null || !autenticacao.isAuthenticated()) {</span>
+<span class="nc" id="L270">            throw new ResponseStatusException(</span>
+                    HttpStatus.UNAUTHORIZED,
+                    &quot;Autenticação necessária.&quot;
+            );
+        }
+
+<span class="fc" id="L276">        boolean gerenteOuAdmin = autenticacao.getAuthorities().stream()</span>
+<span class="fc" id="L277">                .anyMatch(authority -&gt;</span>
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">                        authority.getAuthority().equals(&quot;ROLE_GERENTE&quot;)</span>
+<span class="pc bpc" id="L279" title="1 of 2 branches missed.">                        || authority.getAuthority().equals(&quot;ROLE_ADMIN&quot;));</span>
+
+<span class="pc bpc" id="L281" title="1 of 2 branches missed.">        if (gerenteOuAdmin) {</span>
+<span class="nc" id="L282">            return;</span>
+        }
+
+<span class="fc" id="L285">        Object usuarioId = autenticacao.getDetails();</span>
+
+<span class="pc bpc" id="L287" title="1 of 2 branches missed.">        if (!(usuarioId instanceof Long idCliente)</span>
+<span class="pc bpc" id="L288" title="1 of 2 branches missed.">                || !idCliente.equals(pedido.getIdCliente())) {</span>
+<span class="nc" id="L289">            throw new ResponseStatusException(</span>
+                    HttpStatus.FORBIDDEN,
+                    &quot;Você não tem permissão para acessar este pedido.&quot;
+            );
+        }
+<span class="fc" id="L294">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.16.202610240946</span></div></body></html>

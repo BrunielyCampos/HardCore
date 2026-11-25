@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="pt"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PedidoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report"></a> &gt; <a href="index.source.html" class="el_package">com.hardcore.pedidos.pedido.controller</a> &gt; <span class="el_source">PedidoController.java</span></div><h1>PedidoController.java</h1><pre class="source lang-java linenums">package com.hardcore.pedidos.pedido.controller;
+
+import com.hardcore.pedidos.abacatepayapi.service.PagamentoService;
+import com.hardcore.pedidos.pedido.dto.PedidoRequestDTO;
+import com.hardcore.pedidos.pedido.dto.AtribuirEntregadorDTO;
+import com.hardcore.pedidos.pedido.dto.PedidoResponseDTO;
+import com.hardcore.pedidos.pedido.model.EstadoCompraEnum;
+import com.hardcore.pedidos.pedido.routes.RotasPedido;
+import com.hardcore.pedidos.pedido.service.PedidoService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+public class PedidoController {
+
+    private final PedidoService pedidoService;
+    private final PagamentoService pagamentoService;
+
+    @PostMapping(RotasPedido.CRIAR)
+    public ResponseEntity&lt;PedidoResponseDTO&gt; criarPedido(@RequestBody @Valid PedidoRequestDTO requestDTO) {
+<span class="nc" id="L26">        return ResponseEntity.status(HttpStatus.CREATED).body(pedidoService.criarPedido(requestDTO));</span>
+    }
+
+    @GetMapping(RotasPedido.BUSCAR_POR_ID)
+    public ResponseEntity&lt;PedidoResponseDTO&gt; buscarPorId(@PathVariable Long id) {
+<span class="nc" id="L31">        return ResponseEntity.ok(pedidoService.buscarPedidoPorId(id));</span>
+    }
+
+    @GetMapping(RotasPedido.LISTAR_POR_CLIENTE)
+    public ResponseEntity&lt;List&lt;PedidoResponseDTO&gt;&gt; listarPorCliente(@PathVariable Long idCliente) {
+<span class="nc" id="L36">        return ResponseEntity.ok(pedidoService.listarPedidosPorCliente(idCliente));</span>
+    }
+
+    @PatchMapping(RotasPedido.ATUALIZAR_STATUS)
+    public ResponseEntity&lt;Void&gt; atualizarStatus(@PathVariable Long id, @RequestParam EstadoCompraEnum status) {
+<span class="nc" id="L41">        pedidoService.atualizarStatus(id, status);</span>
+<span class="nc" id="L42">        return ResponseEntity.noContent().build();</span>
+    }
+
+    @PatchMapping(RotasPedido.CANCELAR)
+    public ResponseEntity&lt;PedidoResponseDTO&gt; cancelarPedido(@PathVariable Long id) {
+<span class="nc" id="L47">        return ResponseEntity.ok(pagamentoService.cancelarPagamento(id));</span>
+    }
+
+    @PatchMapping(RotasPedido.ATRIBUIR_ENTREGADOR)
+    public ResponseEntity&lt;PedidoResponseDTO&gt; atribuirEntregador(@PathVariable Long id, @RequestBody @Valid AtribuirEntregadorDTO dto) {
+<span class="nc" id="L52">        return ResponseEntity.ok(pedidoService.atribuirEntregador(id, dto.idEntregador()));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.16.202610240946</span></div></body></html>
