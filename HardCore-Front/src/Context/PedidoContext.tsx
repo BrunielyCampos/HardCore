@@ -3,13 +3,19 @@ import type { ReactNode } from 'react';
 import type { ProdutoCarrinho } from './CarrinhoContext';
 import { useAuth } from './AuthContext';
 
-export type StatusEntrega = 'Confirmado' | 'Em rota' | 'Entregue' | 'Cancelado';
+export type StatusEntrega =
+  | 'Confirmado'
+  | 'Reembolso pendente'
+  | 'Em rota'
+  | 'Entregue'
+  | 'Cancelado';
 
 export interface Pedido {
   id: string;
   itens: ProdutoCarrinho[];
   valorTotal: number;
   status: StatusEntrega;
+  estadoBackend?: string;
   estadoPagamento?: string;
   urlPagamento?: string;
   abacatePayCheckoutId?: string;
@@ -38,7 +44,8 @@ interface PedidoContextData {
   setPedidoAtivo: (pedido: Pedido | null) => void;
   criarPedido: (itens: ProdutoCarrinho[], valorTotal: number) => Promise<Pedido>;
   buscarPedidoBackend: (id: string) => Promise<Pedido | null>;
-  cancelarPedido: (id: string) => Promise<Pedido>;
+  cancelarPedido: (id: string, motivo?: string) => Promise<Pedido>;
+  confirmarReembolso: (id: string, motivo?: string) => Promise<Pedido>;
   estornarPedido: (id: string, motivo: string) => Promise<Pedido>;
   atualizarEntrega: (id: string, motorista: string, veiculo: string, status: StatusEntrega) => void;
   obterPedido: (id: string) => Pedido | undefined;
@@ -50,6 +57,8 @@ const ENDERECO_CHECKOUT_KEY = '@hardcore:endereco_checkout';
 
 function mapearEstadoParaStatus(estado?: string): StatusEntrega {
   switch (estado) {
+    case 'CANCELAMENTO_SOLICITADO':
+      return 'Reembolso pendente';
     case 'A_CAMINHO':
       return 'Em rota';
     case 'ENTREGUE':
@@ -158,6 +167,7 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
           itens: existente?.itens || [],
           valorTotal: dto.valorCompra ?? existente?.valorTotal ?? 0,
           status: mapearEstadoParaStatus(dto.estado),
+          estadoBackend: dto.estado ?? existente?.estadoBackend,
           estadoPagamento: dto.estadoPagamento,
           urlPagamento: dto.urlPagamento ?? existente?.urlPagamento,
           abacatePayCheckoutId: dto.abacatePayCheckoutId ?? existente?.abacatePayCheckoutId,
@@ -180,6 +190,7 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
         itens: [],
         valorTotal: dto.valorCompra ?? 0,
         status: mapearEstadoParaStatus(dto.estado),
+        estadoBackend: dto.estado,
         estadoPagamento: dto.estadoPagamento,
         urlPagamento: dto.urlPagamento,
         abacatePayCheckoutId: dto.abacatePayCheckoutId,
@@ -258,6 +269,7 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
       itens,
       valorTotal: dadosFinais.valorCompra ?? valorTotal,
       status: mapearEstadoParaStatus(dadosFinais.estado),
+      estadoBackend: dadosFinais.estado,
       estadoPagamento: dadosFinais.estadoPagamento,
       urlPagamento: dadosFinais.urlPagamento,
       abacatePayCheckoutId: dadosFinais.abacatePayCheckoutId,
@@ -289,8 +301,9 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
   );
 
   const cancelarPedido = useCallback(
-    async (id: string): Promise<Pedido> => {
-      const res = await fetch(`/api/pedidos/pedidos/${id}/cancelar`, {
+    async (id: string, motivo?: string): Promise<Pedido> => {
+      const query = motivo && motivo.trim() ? `?motivo=${encodeURIComponent(motivo.trim())}` : '';
+      const res = await fetch(`/api/pedidos/pedidos/${id}/cancelar${query}`, {
         method: 'PATCH',
         headers: authHeaders(),
       });
@@ -298,6 +311,25 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
       if (!res.ok) {
         const errText = await res.text();
         throw new Error(errText || `Erro ao cancelar pedido (${res.status}).`);
+      }
+
+      const dto: PedidoBackendDTO = await res.json();
+      return atualizarPedidoLocalComDTO(dto, id);
+    },
+    [authHeaders, atualizarPedidoLocalComDTO]
+  );
+
+  const confirmarReembolso = useCallback(
+    async (id: string, motivo?: string): Promise<Pedido> => {
+      const query = motivo && motivo.trim() ? `?motivo=${encodeURIComponent(motivo.trim())}` : '';
+      const res = await fetch(`/api/pedidos/pedidos/${id}/confirmar-reembolso${query}`, {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || `Erro ao confirmar reembolso (${res.status}).`);
       }
 
       const dto: PedidoBackendDTO = await res.json();
@@ -346,6 +378,7 @@ export function PedidoProvider({ children }: { children: ReactNode }) {
         criarPedido,
         buscarPedidoBackend,
         cancelarPedido,
+        confirmarReembolso,
         estornarPedido,
         atualizarEntrega,
         obterPedido,

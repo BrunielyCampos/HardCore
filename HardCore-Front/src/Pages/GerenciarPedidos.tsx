@@ -15,7 +15,7 @@ import {
 const ENDERECO_CHECKOUT_KEY = '@hardcore:endereco_checkout';
 
 export default function GerenciarPedidos() {
-  const { pedidos, atualizarEntrega, cancelarPedido, estornarPedido } = usePedidos();
+  const { pedidos, atualizarEntrega, cancelarPedido, confirmarReembolso, estornarPedido } = usePedidos();
   const { token } = useAuth();
 
   const [entregadores, setEntregadores] = useState<EntregadorDTO[]>([]);
@@ -130,6 +130,26 @@ export default function GerenciarPedidos() {
     }
   };
 
+  const handleConfirmarReembolso = async (idPedido: string) => {
+    const motivo = window.prompt(
+      `Motivo/observação da confirmação de reembolso para o pedido #${idPedido}:`,
+      'Reembolso confirmado pelo gerenciador'
+    );
+    if (motivo === null) return;
+
+    try {
+      setProcessandoId(idPedido);
+      setErroGlobal(null);
+
+      await confirmarReembolso(idPedido, motivo.trim() || undefined);
+      alert(`Reembolso do pedido #${idPedido} confirmado e estornado!`);
+    } catch (err) {
+      setErroGlobal(err instanceof Error ? err.message : 'Erro ao confirmar reembolso.');
+    } finally {
+      setProcessandoId(null);
+    }
+  };
+
   const handleEstornarPedido = async (idPedido: string) => {
     const motivo = window.prompt(`Motivo do estorno para o pedido #${idPedido}:`);
     if (!motivo || !motivo.trim()) return;
@@ -227,14 +247,21 @@ export default function GerenciarPedidos() {
                 const emRota = estado === 'EM_ENTREGA';
                 const entregue = estado === 'ENTREGA_FEITA';
                 const cancelada = estado === 'CANCELADA';
-                const podeAtribuir = !entrega || cancelada;
+                const reembolsoSolicitado =
+                  prod.status === 'Reembolso pendente' ||
+                  prod.estadoBackend === 'CANCELAMENTO_SOLICITADO';
+                const pedidoCancelado =
+                  prod.status === 'Cancelado' ||
+                  prod.estadoBackend === 'COMPRA_CANCELADA';
+                const podeAtribuir = !pedidoCancelado && !reembolsoSolicitado && (!entrega || cancelada);
 
                 const enderecoValor =
                   enderecoInput[prod.id] ?? obterEnderecoPadrao(prod.enderecoDestino);
 
-                const statusLabel =
-                  prod.status === 'Cancelado'
-                    ? 'Cancelado'
+                const statusLabel = pedidoCancelado
+                  ? 'Cancelado'
+                  : reembolsoSolicitado
+                    ? 'Reembolso pendente'
                     : estado
                       ? estado === 'EM_ENTREGA'
                         ? 'Em rota'
@@ -243,11 +270,13 @@ export default function GerenciarPedidos() {
                           : 'Cancelada'
                       : 'Aguardando';
 
-                const statusStyle = entregue
-                  ? 'bg-[#1a2b3c] border-[#4dabf7] text-[#4dabf7]'
-                  : emRota
-                    ? 'bg-[#1C3026] border-[#8FDEB1] text-[#8FDEB1]'
-                    : 'bg-[#391719] border-[#FF7070] text-[#FF7070]';
+                const statusStyle = reembolsoSolicitado
+                  ? 'bg-[#3D250E] border-[#FFB26B] text-[#FFB26B]'
+                  : entregue
+                    ? 'bg-[#1a2b3c] border-[#4dabf7] text-[#4dabf7]'
+                    : emRota
+                      ? 'bg-[#1C3026] border-[#8FDEB1] text-[#8FDEB1]'
+                      : 'bg-[#391719] border-[#FF7070] text-[#FF7070]';
 
                 return (
                   <div key={prod.id} className="flex items-center w-full min-h-[100px] px-[20px] py-[20px] border-b border-[#414144] gap-[16px]">
@@ -294,25 +323,42 @@ export default function GerenciarPedidos() {
                         </>
                       ) : (
                         <div className="flex flex-col text-[#B7B7BF] text-[12px] gap-0.5">
-                          <span>
-                            <b className="text-white">Entrega #{entrega.id}</b> • Entregador <b className="text-[#FFB26B]">#{entrega.idEntregador}</b>
-                          </span>
-                          <span className="line-clamp-1"><b className="text-white">Destino:</b> {entrega.enderecoDestino}</span>
-                          <span>
-                            <b className="text-white">Cliente:</b>{' '}
-                            {entrega.confirmacaoCliente === true
-                              ? 'Confirmou recebimento'
-                              : entrega.confirmacaoCliente === false
-                                ? 'Marcou não recebido'
-                                : 'Aguardando confirmação'}
-                          </span>
+                          {entrega && (
+                            <>
+                              <span>
+                                <b className="text-white">Entrega #{entrega.id}</b> • Entregador <b className="text-[#FFB26B]">#{entrega.idEntregador}</b>
+                              </span>
+                              <span className="line-clamp-1"><b className="text-white">Destino:</b> {entrega.enderecoDestino}</span>
+                              <span>
+                                <b className="text-white">Cliente:</b>{' '}
+                                {entrega.confirmacaoCliente === true
+                                  ? 'Confirmou recebimento'
+                                  : entrega.confirmacaoCliente === false
+                                    ? 'Marcou não recebido'
+                                    : 'Aguardando confirmação'}
+                              </span>
+                            </>
+                          )}
+                          {reembolsoSolicitado && (
+                            <span className="text-[#FFB26B] font-semibold">
+                              Cliente solicitou cancelamento/reembolso — aguarda confirmação do gerenciador.
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
 
                     <div className="w-[180px] flex flex-col items-end gap-2">
-                      {prod.status === 'Cancelado' ? (
+                      {pedidoCancelado ? (
                         <span className="text-[#FF7070] text-[12px] font-semibold">Pedido Cancelado</span>
+                      ) : reembolsoSolicitado ? (
+                        <button
+                          disabled={processandoId === prod.id}
+                          onClick={() => handleConfirmarReembolso(prod.id)}
+                          className="px-3 py-2 bg-[#FFB26B] text-black text-[11px] font-bold rounded-[4px] hover:bg-[#ffa34d] transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          {processandoId === prod.id ? 'CONFIRMANDO...' : 'CONFIRMAR REEMBOLSO'}
+                        </button>
                       ) : (
                         <>
                           {podeAtribuir && (

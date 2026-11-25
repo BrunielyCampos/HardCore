@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import java.math.BigDecimal;
@@ -150,78 +151,123 @@ public class PagamentoService {
         return abacatePayService.consultarCheckout(pedido.getAbacatePayCheckoutId());
     }
 
-    // @Transactional
-    // public PedidoResponseDTO cancelarPagamento(Long pedidoId) {
-    //     Pedido pedido = buscarPedido(pedidoId);
-    //     validarAcessoAoPedido(pedido);
-    //     if (pedido.getEstadoPagamento() == EstadoPagamentoEnum.ESTORNADO || pedido.getEstadoPagamento() == EstadoPagamentoEnum.CANCELADO) {
-    //         return pedidoMapper.toDTO(pedido);
-    //     }
-    //     if (pedido.getEstadoPagamento() == EstadoPagamentoEnum.EM_DISPUTA) {
-    //         throw new ResponseStatusException(HttpStatus.CONFLICT, "Pedido em disputa não pode ser cancelado automaticamente.");
-    //     }
-    //     if (pedido.getAbacatePayCheckoutId() != null) {
-    //         if (pedido.getEstadoPagamento() == EstadoPagamentoEnum.PAGO) {
-    //             validarResposta(abacatePayService.estornarCheckout(pedido.getAbacatePayCheckoutId(), "Cancelamento do pedido " + pedidoId));
-    //             pedido.setEstadoPagamento(EstadoPagamentoEnum.ESTORNADO);
-    //         } else {
-    //             validarResposta(abacatePayService.cancelarCheckout(pedido.getAbacatePayCheckoutId()));
-    //             pedido.setEstadoPagamento(EstadoPagamentoEnum.CANCELADO);
-    //         }
-    //     } else {
-    //         pedido.setEstadoPagamento(EstadoPagamentoEnum.CANCELADO);
-    //     }
-    //     liberarEstoque(pedido);
-    //     pedido.setEstado(EstadoCompraEnum.COMPRA_CANCELADA);
-    //     pedidoRepository.save(pedido);
-    //     return pedidoMapper.toDTO(pedido);
-    // }
-
     @Transactional
-    public PedidoResponseDTO cancelarPagamento(Long pedidoId) {
+    public PedidoResponseDTO solicitarCancelamentoOuReembolso(Long pedidoId, String motivo) {
         Pedido pedido = buscarPedido(pedidoId);
         validarAcessoAoPedido(pedido);
 
-        if (pedido.getEstadoPagamento() == EstadoPagamentoEnum.ESTORNADO ||
-            pedido.getEstadoPagamento() == EstadoPagamentoEnum.CANCELADO) {
+        if (pedido.getEstado() == EstadoCompraEnum.COMPRA_CANCELADA
+                || pedido.getEstadoPagamento() == EstadoPagamentoEnum.ESTORNADO
+                || pedido.getEstadoPagamento() == EstadoPagamentoEnum.CANCELADO) {
             return pedidoMapper.toDTO(pedido);
         }
 
         if (pedido.getEstadoPagamento() == EstadoPagamentoEnum.EM_DISPUTA) {
             throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                "Pedido em disputa não pode ser cancelado automaticamente."
+                    HttpStatus.CONFLICT,
+                    "Pedido em disputa não pode ser cancelado automaticamente."
             );
         }
 
-        if (pedido.getEstadoPagamento() == EstadoPagamentoEnum.PAGO) {
-            validarResposta(
-                abacatePayService.estornarCheckout(
-                    pedido.getAbacatePayCheckoutId(),
-                    "Cancelamento do pedido " + pedidoId
-                )
+        if (pedido.getEstado() == EstadoCompraEnum.ENTREGUE) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Não é possível solicitar cancelamento ou reembolso de um pedido já entregue."
             );
-            pedido.setEstadoPagamento(EstadoPagamentoEnum.ESTORNADO);
-        } else {
+        }
+
+        if (pedido.getEstadoPagamento() != EstadoPagamentoEnum.PAGO) {
+            if (pedido.getAbacatePayCheckoutId() != null) {
+                validarResposta(abacatePayService.cancelarCheckout(pedido.getAbacatePayCheckoutId()));
+            }
             pedido.setEstadoPagamento(EstadoPagamentoEnum.CANCELADO);
+            liberarEstoque(pedido);
+            pedido.setEstado(EstadoCompraEnum.COMPRA_CANCELADA);
+            pedidoRepository.save(pedido);
+            return pedidoMapper.toDTO(pedido);
         }
 
+        pedido.setEstado(EstadoCompraEnum.CANCELAMENTO_SOLICITADO);
+        pedidoRepository.save(pedido);
+        return pedidoMapper.toDTO(pedido);
+    }
+
+    @Transactional
+    public PedidoResponseDTO confirmarReembolso(Long pedidoId, String motivo) {
+        Authentication autenticacao = SecurityContextHolder.getContext().getAuthentication();
+        boolean gerenteOuAdmin = autenticacao != null && autenticacao.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_GERENTE") || a.getAuthority().equals("ROLE_ADMIN"));
+        if (!gerenteOuAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas gerente ou admin pode confirmar reembolso.");
+        }
+
+        Pedido pedido = buscarPedido(pedidoId);
+        validarAcessoAoPedido(pedido);
+
+        if (pedido.getEstado() == EstadoCompraEnum.COMPRA_CANCELADA
+                && pedido.getEstadoPagamento() == EstadoPagamentoEnum.ESTORNADO) {
+            return pedidoMapper.toDTO(pedido);
+        }
+
+        String motivoFinal = (motivo != null && !motivo.isBlank())
+                ? motivo
+                : "Reembolso confirmado pelo gerenciador para o pedido " + pedidoId;
+
+        if (pedido.getEstadoPagamento() == EstadoPagamentoEnum.PAGO
+                || pedido.getEstadoPagamento() == EstadoPagamentoEnum.ESTORNADO) {
+            return estornarPagamento(pedidoId, motivoFinal);
+        }
+
+        if (pedido.getAbacatePayCheckoutId() != null
+                && pedido.getEstadoPagamento() != EstadoPagamentoEnum.CANCELADO) {
+            validarResposta(abacatePayService.cancelarCheckout(pedido.getAbacatePayCheckoutId()));
+        }
+
+        pedido.setEstadoPagamento(EstadoPagamentoEnum.CANCELADO);
         liberarEstoque(pedido);
         pedido.setEstado(EstadoCompraEnum.COMPRA_CANCELADA);
-
         pedidoRepository.save(pedido);
-
         return pedidoMapper.toDTO(pedido);
+    }
+
+    @Transactional
+    public PedidoResponseDTO cancelarPagamento(Long pedidoId) {
+        return solicitarCancelamentoOuReembolso(pedidoId, null);
     }
 
     @Transactional
     public PedidoResponseDTO estornarPagamento(Long pedidoId, String motivo) {
         Pedido pedido = buscarPedido(pedidoId);
         validarAcessoAoPedido(pedido);
+
+        if (pedido.getEstadoPagamento() == EstadoPagamentoEnum.ESTORNADO) {
+            liberarEstoque(pedido);
+            pedido.setEstado(EstadoCompraEnum.COMPRA_CANCELADA);
+            pedidoRepository.save(pedido);
+            return pedidoMapper.toDTO(pedido);
+        }
+
         if (pedido.getEstadoPagamento() != EstadoPagamentoEnum.PAGO || pedido.getAbacatePayCheckoutId() == null) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Só é possível estornar um pedido pago com checkout associado.");
         }
-        validarResposta(abacatePayService.estornarCheckout(pedido.getAbacatePayCheckoutId(), motivo));
+
+        try {
+            validarResposta(abacatePayService.estornarCheckout(pedido.getAbacatePayCheckoutId(), motivo));
+        } catch (HttpClientErrorException.BadRequest ex) {
+            String corpo = ex.getResponseBodyAsString();
+            if (corpo != null && corpo.contains("já foi reembolsada")) {
+                pedido.setEstadoPagamento(EstadoPagamentoEnum.ESTORNADO);
+                liberarEstoque(pedido);
+                pedido.setEstado(EstadoCompraEnum.COMPRA_CANCELADA);
+                pedidoRepository.save(pedido);
+                return pedidoMapper.toDTO(pedido);
+            }
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    corpo != null && !corpo.isBlank() ? corpo : ex.getMessage()
+            );
+        }
+
         pedido.setEstadoPagamento(EstadoPagamentoEnum.ESTORNADO);
         liberarEstoque(pedido);
         pedido.setEstado(EstadoCompraEnum.COMPRA_CANCELADA);

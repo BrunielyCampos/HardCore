@@ -43,8 +43,18 @@ public class PedidoController {
     }
 
     @PatchMapping(RotasPedido.CANCELAR)
-    public ResponseEntity<PedidoResponseDTO> cancelarPedido(@PathVariable Long id) {
-        return ResponseEntity.ok(pagamentoService.cancelarPagamento(id));
+    public ResponseEntity<PedidoResponseDTO> cancelarPedido(
+            @PathVariable Long id,
+            @RequestParam(required = false) String motivo) {
+        return ResponseEntity.ok(pagamentoService.solicitarCancelamentoOuReembolso(id, motivo));
+    }
+
+    @PostMapping(RotasPedido.CONFIRMAR_REEMBOLSO)
+    public ResponseEntity<PedidoResponseDTO> confirmarReembolso(
+        
+            @PathVariable Long id,
+            @RequestParam(required = false) String motivo) {
+        return ResponseEntity.ok(pagamentoService.confirmarReembolso(id, motivo));
     }
 
     @PatchMapping(RotasPedido.ATRIBUIR_ENTREGADOR)
