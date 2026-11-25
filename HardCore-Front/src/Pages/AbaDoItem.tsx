@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import HeaderSimples from '../Componentes/HeaderSimples/HeaderSimples';
 import Footer from '../Componentes/Footer/FooterPagamento';
@@ -8,9 +8,27 @@ import { useAuth } from '../Context/AuthContext';
 
 import bannerAnuncio from '../assets/HomeAsset/RodapeAnuncio.png';
 
-const StarIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#FFC107" className="w-4 h-4">
-    <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clipRule="evenodd" />
+interface AvaliacaoDTO {
+  id: number;
+  avaliacao: number;
+  campoComentario?: string;
+  produto_id: number;
+  autorId?: number;
+  autorTipo?: string;
+}
+
+const StarIcon = ({ filled }: { filled: boolean }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill={filled ? '#FFC107' : '#555555'}
+    className="w-4 h-4"
+  >
+    <path
+      fillRule="evenodd"
+      d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
@@ -19,11 +37,32 @@ export default function AbaDoItem() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isComprando, setIsComprando] = useState(false);
+  const [avaliacoes, setAvaliacoes] = useState<AvaliacaoDTO[]>([]);
   const { adicionarAoCarrinho } = useCarrinho();
   const { produtos, carregando } = useProdutos();
-  const { isAuthenticated, usuario } = useAuth();
+  const { isAuthenticated, usuario, token } = useAuth();
 
   const produto = produtos.find((p) => p.id === id);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const carregarAvaliacoes = async () => {
+      try {
+        const res = await fetch(`/api/produtos/avaliacoes/produtos/${id}/avaliacoes`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const data: AvaliacaoDTO[] = await res.json();
+          setAvaliacoes(data);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar avaliações do produto:', err);
+      }
+    };
+
+    carregarAvaliacoes();
+  }, [id, token]);
 
   if (carregando) {
     return (
@@ -52,6 +91,10 @@ export default function AbaDoItem() {
     );
   }
 
+  const mediaAvaliacoes = produto.mediaAvaliacoes ?? 0;
+  const totalAvaliacoes = produto.totalAvaliacoes ?? 0;
+  const estrelasPreenchidas = Math.round(mediaAvaliacoes);
+
   const precoFormatado = produto.precoVenda.toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -61,13 +104,13 @@ export default function AbaDoItem() {
     ? produto.descricao.split(/\n|;/).map((s) => s.trim()).filter(Boolean)
     : [`Marca: ${produto.marca || 'HardCore'}`, `Categoria: ${produto.categoria}`, `SKU: ${produto.sku}`];
 
-  const handleComprarAgora = () => {
+  const handleComprarAgora = async () => {
     if (!isAuthenticated || !usuario) {
       navigate('/login', { state: { from: location.pathname } });
       return;
     }
 
-    adicionarAoCarrinho({
+    await adicionarAoCarrinho({
       id: produto.id,
       nome: produto.nome,
       imagem: produto.imagemPrincipal,
@@ -119,14 +162,20 @@ export default function AbaDoItem() {
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <StarIcon key={i} />
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-0.5">
+                  {[1, 2, 3, 4, 5].map((num) => (
+                    <StarIcon key={num} filled={num <= estrelasPreenchidas} />
                   ))}
                 </div>
+                <span className="text-[13px] font-semibold text-white">
+                  {mediaAvaliacoes.toFixed(1)}
+                </span>
+                <span className="text-[12px] text-white/60">
+                  ({totalAvaliacoes} {totalAvaliacoes === 1 ? 'avaliação' : 'avaliações'})
+                </span>
                 <span className="text-[14px] text-white font-normal ml-1">
-                  Categoria: {produto.categoria}
+                  • {produto.categoria}
                 </span>
               </div>
             </div>
@@ -173,6 +222,54 @@ export default function AbaDoItem() {
             </div>
           </div>
         </div>
+
+        {/* Avaliações dos Clientes */}
+        <section className="mx-auto mt-12 w-full max-w-[1125px] px-[40px]">
+          <div className="rounded-[8px] border border-[#2A0A0A] bg-[#181818] p-6">
+            <div className="mb-4 flex items-center justify-between border-b border-[#2A0A0A] pb-3">
+              <h2 className="font-['Iosevka_Charon'] text-[22px] font-bold text-white">
+                AVALIAÇÕES DE CLIENTES
+              </h2>
+              <span className="text-[13px] text-white/60">
+                Média {mediaAvaliacoes.toFixed(1)} / 5.0 ({totalAvaliacoes})
+              </span>
+            </div>
+
+            {avaliacoes.length === 0 ? (
+              <p className="text-[14px] italic text-white/60">
+                Este produto ainda não possui avaliações.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {avaliacoes.map((av) => (
+                  <div
+                    key={av.id}
+                    className="flex flex-col gap-1.5 rounded-[6px] border border-[#2A0A0A] bg-[#222222] p-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((num) => (
+                          <StarIcon key={num} filled={num <= av.avaliacao} />
+                        ))}
+                        <span className="ml-2 text-[13px] font-bold text-white">
+                          {av.avaliacao}.0
+                        </span>
+                      </div>
+                      {av.autorId && (
+                        <span className="text-[12px] text-white/50">
+                          Cliente #{av.autorId}
+                        </span>
+                      )}
+                    </div>
+                    {av.campoComentario && (
+                      <p className="text-[14px] text-white/85">{av.campoComentario}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
 
         <section className="mt-[40px] px-[40px] flex justify-center">
           <img src={bannerAnuncio} alt="Anúncio" className="w-[1125px] rounded-[10px] object-cover" />

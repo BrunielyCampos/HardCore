@@ -217,11 +217,13 @@ export default function HeaderSimples() {
             iconBlack={iconCupomBlack}
           />
 
-          <MaisVendidoButton
-            label="Mais vendidos"
-            iconWhite={iconVendidosWhite}
-            iconBlack={iconVendidosBlack}
-          />
+          <Link to="/mais-vendidos" className="pointer-events-auto">
+            <MaisVendidoButton
+              label="Mais vendidos"
+              iconWhite={iconVendidosWhite}
+              iconBlack={iconVendidosBlack}
+            />
+          </Link>
 
           {isEntregador && (
             <Link

@@ -20,15 +20,24 @@ public class ProdutoResponseDTO {
     @NotNull
     private Double preco;
 
+    private String imagemPrincipal;
+
     private Long idPrateleira;
 
+    private Double mediaAvaliacoes;
+    private Integer totalAvaliacoes;
+
     public ProdutoResponseDTO(Long id, String nome, String marca, String categoria, @NotNull Double preco,
-                              Long idPrateleira) {
+                              String imagemPrincipal, Long idPrateleira, Double mediaAvaliacoes,
+                              Integer totalAvaliacoes) {
         this.id = id;
         this.nome = nome;
         this.marca = marca;
         this.categoria = categoria;
         this.preco = preco;
+        this.imagemPrincipal = imagemPrincipal;
         this.idPrateleira = idPrateleira;
+        this.mediaAvaliacoes = mediaAvaliacoes;
+        this.totalAvaliacoes = totalAvaliacoes;
     }
 }

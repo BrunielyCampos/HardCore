@@ -17,6 +17,8 @@ export interface Produto {
   status: 'Publicado' | 'Rascunho' | 'Arquivado';
   imagemPrincipal: string;
   secaoVitrine: SecaoVitrine;
+  mediaAvaliacoes?: number;
+  totalAvaliacoes?: number;
 }
 
 interface ProdutoBackendDTO {
@@ -25,7 +27,10 @@ interface ProdutoBackendDTO {
   marca: string;
   categoria: string;
   preco: number;
+  imagemPrincipal?: string | null;
   idPrateleira?: number | null;
+  mediaAvaliacoes?: number | null;
+  totalAvaliacoes?: number | null;
 }
 
 interface EstoqueBackendDTO {
@@ -39,7 +44,6 @@ interface ProdutoMetaLocal {
   descricao?: string;
   precoPromocional?: number;
   status?: 'Publicado' | 'Rascunho' | 'Arquivado';
-  imagemPrincipal?: string;
   secaoVitrine?: SecaoVitrine;
 }
 
@@ -123,8 +127,10 @@ export function ProdutoProvider({ children }: { children: ReactNode }) {
           descricao: meta.descricao || '',
           precoPromocional: meta.precoPromocional,
           status: meta.status || 'Publicado',
-          imagemPrincipal: meta.imagemPrincipal || 'https://placehold.co/400x400/1c1c1f/ffffff?text=HardCore',
+          imagemPrincipal: p.imagemPrincipal || 'https://placehold.co/400x400/1c1c1f/ffffff?text=HardCore',
           secaoVitrine: meta.secaoVitrine || 'Oferta',
+          mediaAvaliacoes: Number(p.mediaAvaliacoes ?? 0),
+          totalAvaliacoes: Number(p.totalAvaliacoes ?? 0),
         };
       });
 
@@ -149,6 +155,7 @@ export function ProdutoProvider({ children }: { children: ReactNode }) {
         marca: produto.marca || 'HardCore',
         categoria: produto.categoria || 'Geral',
         preco: produto.precoVenda,
+        imagemPrincipal: produto.imagemPrincipal,
         idPrateleira: null,
       }),
     });
@@ -161,7 +168,6 @@ export function ProdutoProvider({ children }: { children: ReactNode }) {
     const criado: ProdutoBackendDTO = await res.json();
     const idReal = String(criado.id);
 
-    // Cadastra o estoque inicial vinculado ao ID real
     await fetch('/api/produtos/estoque/cadastrar', {
       method: 'POST',
       headers: authHeaders(),
@@ -176,7 +182,6 @@ export function ProdutoProvider({ children }: { children: ReactNode }) {
       descricao: produto.descricao,
       precoPromocional: produto.precoPromocional,
       status: produto.status,
-      imagemPrincipal: produto.imagemPrincipal,
       secaoVitrine: produto.secaoVitrine,
     });
 
@@ -192,6 +197,7 @@ export function ProdutoProvider({ children }: { children: ReactNode }) {
         marca: produtoAtualizado.marca || 'HardCore',
         categoria: produtoAtualizado.categoria || 'Geral',
         preco: produtoAtualizado.precoVenda,
+        imagemPrincipal: produtoAtualizado.imagemPrincipal,
         idPrateleira: null,
       }),
     });
@@ -201,7 +207,6 @@ export function ProdutoProvider({ children }: { children: ReactNode }) {
       throw new Error(msg || 'Erro ao atualizar produto.');
     }
 
-    // Atualiza quantidade no estoque (PUT /estoque/{produto_id}/quantidade espera o inteiro direto no body)
     await fetch(`/api/produtos/estoque/${id}/quantidade`, {
       method: 'PUT',
       headers: authHeaders(),
@@ -213,7 +218,6 @@ export function ProdutoProvider({ children }: { children: ReactNode }) {
       descricao: produtoAtualizado.descricao,
       precoPromocional: produtoAtualizado.precoPromocional,
       status: produtoAtualizado.status,
-      imagemPrincipal: produtoAtualizado.imagemPrincipal,
       secaoVitrine: produtoAtualizado.secaoVitrine,
     });
 

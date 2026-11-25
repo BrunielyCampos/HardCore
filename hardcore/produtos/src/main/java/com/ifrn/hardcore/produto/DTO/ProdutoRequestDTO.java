@@ -22,13 +22,17 @@ public class ProdutoRequestDTO {
     @Positive
     private Double preco;
 
+    private String imagemPrincipal;
+
     private Long idPrateleira;
 
-    public ProdutoRequestDTO(String nome, String marca, String categoria, @NotNull @Positive Double preco, Long idPrateleira){
+    public ProdutoRequestDTO(String nome, String marca, String categoria, @NotNull @Positive Double preco,
+                             String imagemPrincipal, Long idPrateleira) {
         this.nome = nome;
         this.marca = marca;
         this.categoria = categoria;
         this.preco = preco;
+        this.imagemPrincipal = imagemPrincipal;
         this.idPrateleira = idPrateleira;
     }
 }

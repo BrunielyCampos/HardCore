@@ -1,0 +1,1 @@
+ALTER TABLE tb_produto ADD COLUMN IF NOT EXISTS imagem_principal TEXT;

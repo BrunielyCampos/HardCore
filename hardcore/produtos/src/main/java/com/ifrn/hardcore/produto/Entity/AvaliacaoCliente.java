@@ -1,6 +1,8 @@
 package com.ifrn.hardcore.produto.Entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,7 +20,9 @@ public class AvaliacaoCliente {
     private Long id;
 
     @NotNull
-    private boolean avaliacao;
+    @Min(1)
+    @Max(5)
+    private Integer avaliacao;
 
     @Column(nullable = true)
     private String campoComentario;

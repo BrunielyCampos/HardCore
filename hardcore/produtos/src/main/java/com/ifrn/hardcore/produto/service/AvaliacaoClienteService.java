@@ -1,4 +1,3 @@
-
 package com.ifrn.hardcore.produto.service;
 
 import jakarta.validation.Valid;
@@ -99,7 +98,7 @@ public class AvaliacaoClienteService {
 
         AvaliacaoCliente avaliacao = new AvaliacaoCliente();
 
-        avaliacao.setAvaliacao(dto.isAvaliacao());
+        avaliacao.setAvaliacao(dto.getAvaliacao());
         avaliacao.setCampoComentario(dto.getCampoComentario());
         avaliacao.setProduto(produto);
         avaliacao.setAutorId(autorId);
@@ -117,7 +116,7 @@ public class AvaliacaoClienteService {
 
         return new AvaliacaoClienteResponseDTO(
                 avaliacao.getId(),
-                avaliacao.isAvaliacao(),
+                avaliacao.getAvaliacao(),
                 avaliacao.getCampoComentario(),
                 produtoId,
                 avaliacao.getAutorId(),

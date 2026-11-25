@@ -10,7 +10,7 @@ import lombok.Setter;
 public class AvaliacaoClienteResponseDTO {
 
     private Long id;
-    private boolean avaliacao;
+    private Integer avaliacao;
     private String campoComentario;
     private Long produto_id;
     private Long autorId;
@@ -18,12 +18,11 @@ public class AvaliacaoClienteResponseDTO {
 
     public AvaliacaoClienteResponseDTO(
             Long id,
-            boolean avaliacao,
+            Integer avaliacao,
             String campoComentario,
             Long produto_id,
             Long autorId,
             String autorTipo) {
-
         this.id = id;
         this.avaliacao = avaliacao;
         this.campoComentario = campoComentario;

@@ -205,7 +205,9 @@ export default function HeaderAnimado() {
             <DepartamentoDropdown isOpen={isDepartamentoOpen} />
           </div>
           <CuponsButton label="Cupons" iconWhite={iconCupomWhite} iconBlack={iconCupomBlack} />
-          <MaisVendidoButton label="Mais vendidos" iconWhite={iconVendidosWhite} iconBlack={iconVendidosBlack} />
+          <Link to="/mais-vendidos" className="pointer-events-auto">
+            <MaisVendidoButton label="Mais vendidos" iconWhite={iconVendidosWhite} iconBlack={iconVendidosBlack} />
+          </Link>
 
           {isEntregador && (
             <Link

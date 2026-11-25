@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.ifrn.hardcore.produto.DTO.ProdutoRequestDTO;
 import com.ifrn.hardcore.produto.DTO.ProdutoResponseDTO;
+import com.ifrn.hardcore.produto.Entity.AvaliacaoCliente;
 import com.ifrn.hardcore.produto.Entity.Estoque;
 import com.ifrn.hardcore.produto.Entity.Produto;
 import com.ifrn.hardcore.produto.exception.ProdutoNaoEncontradoException;
@@ -25,38 +26,42 @@ public class ProdutoService {
         this.estoqueRepository = estoqueRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<ProdutoResponseDTO> listarTodos() {
         return repository.findAll().stream().map(this::ToResponseDTO).toList();
     }
 
-    public ProdutoResponseDTO buscarPorId(Long id){
+    @Transactional(readOnly = true)
+    public ProdutoResponseDTO buscarPorId(Long id) {
         Produto produto = repository.findById(id).orElseThrow(() -> new ProdutoNaoEncontradoException(id));
         return ToResponseDTO(produto);
     }
 
-    public List<ProdutoResponseDTO> listarPorIds(List<Long> ids){
+    @Transactional(readOnly = true)
+    public List<ProdutoResponseDTO> listarPorIds(List<Long> ids) {
         List<Produto> produtos = repository.findAllById(ids);
         return produtos.stream().map(this::ToResponseDTO).toList();
     }
 
-    public List<ProdutoResponseDTO> buscarPorCategoria(String categoria){
+    @Transactional(readOnly = true)
+    public List<ProdutoResponseDTO> buscarPorCategoria(String categoria) {
         List<Produto> produtos = repository.findByCategoriaAllIgnoreCase(categoria);
         return produtos.stream().map(this::ToResponseDTO).toList();
     }
 
-    public List<ProdutoResponseDTO> buscarPorMarca(String marca){
+    @Transactional(readOnly = true)
+    public List<ProdutoResponseDTO> buscarPorMarca(String marca) {
         List<Produto> produtosMarca = repository.findByMarcaAllIgnoreCase(marca);
         return produtosMarca.stream().map(this::ToResponseDTO).toList();
     }
 
-
-    public ProdutoResponseDTO cadastrarProduto(ProdutoRequestDTO dto){
+    public ProdutoResponseDTO cadastrarProduto(ProdutoRequestDTO dto) {
         Produto salvo = repository.save(toEntity(dto));
         return ToResponseDTO(salvo);
     }
 
+    @Transactional
     public ProdutoResponseDTO atualizar(Long id, ProdutoRequestDTO dto) {
-
         Produto produto = repository.findById(id)
                 .orElseThrow(() -> new ProdutoNaoEncontradoException(id));
 
@@ -64,6 +69,7 @@ public class ProdutoService {
         produto.setMarca(dto.getMarca());
         produto.setCategoria(dto.getCategoria());
         produto.setPreco(dto.getPreco());
+        produto.setImagemPrincipal(dto.getImagemPrincipal());
 
         Produto salvo = repository.save(produto);
         return ToResponseDTO(salvo);
@@ -71,7 +77,6 @@ public class ProdutoService {
 
     @Transactional
     public void deletarPorId(Long id) {
-
         Produto produto = repository.findById(id)
                 .orElseThrow(() -> new ProdutoNaoEncontradoException(id));
 
@@ -98,13 +103,42 @@ public class ProdutoService {
     }
 
     public Produto toEntity(ProdutoRequestDTO dto) {
-        return new Produto(null, dto.getNome(),dto.getMarca(), dto.getCategoria(), dto.getPreco(), null);
+        return new Produto(
+                null,
+                dto.getNome(),
+                dto.getMarca(),
+                dto.getCategoria(),
+                dto.getPreco(),
+                dto.getImagemPrincipal(),
+                null
+        );
     }
 
-    public ProdutoResponseDTO ToResponseDTO(Produto prod){
+    public ProdutoResponseDTO ToResponseDTO(Produto prod) {
         Long idPrateleira = prod.getPrateleira() != null ? prod.getPrateleira().getId() : null;
 
-        return new ProdutoResponseDTO(prod.getId(), prod.getNome(), prod.getMarca(), prod.getCategoria(), prod.getPreco(),
-                idPrateleira);
+        List<AvaliacaoCliente> avals = prod.getAvaliacoes();
+        int totalAvaliacoes = (avals != null) ? avals.size() : 0;
+        double mediaAvaliacoes = 0.0;
+
+        if (totalAvaliacoes > 0) {
+            mediaAvaliacoes = avals.stream()
+                    .filter(a -> a.getAvaliacao() != null)
+                    .mapToInt(AvaliacaoCliente::getAvaliacao)
+                    .average()
+                    .orElse(0.0);
+        }
+
+        return new ProdutoResponseDTO(
+                prod.getId(),
+                prod.getNome(),
+                prod.getMarca(),
+                prod.getCategoria(),
+                prod.getPreco(),
+                prod.getImagemPrincipal(),
+                idPrateleira,
+                mediaAvaliacoes,
+                totalAvaliacoes
+        );
     }
 }

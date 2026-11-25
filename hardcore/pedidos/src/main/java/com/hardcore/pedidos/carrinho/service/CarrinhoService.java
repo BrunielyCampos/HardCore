@@ -19,15 +19,14 @@ public class CarrinhoService {
 
     @Transactional
     public CarrinhoResponseDTO criarCarrinho(CarrinhoRequestDTO requestDTO) {
-        carrinhoRepository.findByIdCliente(requestDTO.getIdCliente()).ifPresent(c -> {
-            throw new IllegalStateException("Já existe um carrinho para este cliente.");
-        });
-
-        Carrinho carrinho = carrinhoMapper.toEntity(requestDTO);
-        carrinho.setId(null);
-        Carrinho salvo = carrinhoRepository.save(carrinho);
-        
-        return carrinhoMapper.toDTO(salvo);
+        return carrinhoRepository.findByIdCliente(requestDTO.getIdCliente())
+                .map(carrinhoMapper::toDTO)
+                .orElseGet(() -> {
+                    Carrinho carrinho = carrinhoMapper.toEntity(requestDTO);
+                    carrinho.setId(null);
+                    Carrinho salvo = carrinhoRepository.save(carrinho);
+                    return carrinhoMapper.toDTO(salvo);
+                });
     }
 
     public CarrinhoResponseDTO buscarCarrinhoPorCliente(Long idCliente) {

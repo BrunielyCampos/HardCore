@@ -33,7 +33,7 @@ public class SecurityConfig {
                         .permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/pagamentos/webhook/registrar")
-                        .hasAuthority("ROLE_ADMIN")
+                        .hasAnyAuthority("ROLE_ADMIN", "ROLE_ADMINISTRADOR")
 
                         .requestMatchers(HttpMethod.POST, "/pedidos/criar")
                         .authenticated()
@@ -43,14 +43,13 @@ public class SecurityConfig {
                                 "/pedidos/cliente/*")
                         .authenticated()
 
-                        .requestMatchers(HttpMethod.GET,
-                                "/carrinho/cliente/*")
-                        .hasAuthority("ROLE_GERENTE")
+                        .requestMatchers("/carrinho/**", "/itens-carrinho/**")
+                        .authenticated()
 
                         .requestMatchers(
                                 "/pedidos/*/status",
                                 "/pedidos/*/entregador")
-                        .hasAuthority("ROLE_GERENTE")
+                        .hasAnyAuthority("ROLE_GERENTE", "ROLE_ADMIN", "ROLE_ADMINISTRADOR")
 
                         .requestMatchers("/itens-pedido/**").authenticated()
 
