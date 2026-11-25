@@ -1,7 +1,9 @@
 package com.hardcore.pedidos.pedido.mapper;
 
+import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import com.hardcore.pedidos.itempedido.model.ItemPedido;
 import com.hardcore.pedidos.pedido.dto.PedidoRequestDTO;
 import com.hardcore.pedidos.pedido.dto.PedidoResponseDTO;
 import com.hardcore.pedidos.pedido.model.EstadoCompraEnum;
@@ -20,6 +22,10 @@ public interface PedidoMapper {
     @Mapping(target = "estoqueBaixado", ignore = true)
     @Mapping(target = "itens", ignore = true)
     Pedido toEntity(PedidoRequestDTO dto);
-    
+
+    PedidoResponseDTO.ItemPedidoDTO toItemDTO(ItemPedido item);
+
+    List<PedidoResponseDTO.ItemPedidoDTO> toItemDTOList(List<ItemPedido> itens);
+
     PedidoResponseDTO toDTO(Pedido pedido);
 }

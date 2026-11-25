@@ -28,6 +28,7 @@ export default function Confirmacao() {
   const [feedbackEntrega, setFeedbackEntrega] = useState<string | null>(null);
 
   const carregouInicialRef = useRef<string | null>(null);
+  const limpouCarrinhoRef = useRef(false);
   const pedido = obterPedido(id || '');
 
   const atualizarTudo = useCallback(async () => {
@@ -42,8 +43,11 @@ export default function Confirmacao() {
   }, [id, buscarPedidoBackend, token]);
 
   useEffect(() => {
+    if (limpouCarrinhoRef.current) return;
+    limpouCarrinhoRef.current = true;
     limparCarrinho();
-  }, [limparCarrinho]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!id || carregouInicialRef.current === id) return;
