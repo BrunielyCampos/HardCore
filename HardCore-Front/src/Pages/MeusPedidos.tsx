@@ -14,7 +14,7 @@ const ENDERECO_CHECKOUT_KEY = '@hardcore:endereco_checkout';
 
 export default function MeusPedidos() {
   const navigate = useNavigate();
-  const { pedidos, buscarPedidoBackend, cancelarPedido, estornarPedido, setPedidoAtivo } = usePedidos();
+  const { pedidos, buscarPedidoBackend, cancelarPedido, setPedidoAtivo } = usePedidos();
   const { token } = useAuth();
 
   const [entregasPorPedido, setEntregasPorPedido] = useState<Record<string, EntregaResponseDTO | null>>({});
@@ -101,7 +101,7 @@ export default function MeusPedidos() {
       setFeedback(
         pagamentoPendente
           ? `Pagamento do pedido #${idPedido} cancelado com sucesso!`
-          : `Pedido #${idPedido} cancelado com sucesso!`
+          : `Solicitação de cancelamento do pedido #${idPedido} enviada com sucesso!`
       );
     } catch (err) {
       setFeedback(err instanceof Error ? err.message : 'Erro ao cancelar pedido.');
@@ -110,14 +110,14 @@ export default function MeusPedidos() {
     }
   };
 
-  const handleEstornarPedido = async (idPedido: string) => {
+  const handleSolicitarReembolso = async (idPedido: string) => {
     const motivo = window.prompt(`Informe o motivo do reembolso para o pedido #${idPedido}:`);
     if (!motivo || !motivo.trim()) return;
     try {
       setProcessandoId(idPedido);
       setFeedback(null);
-      await estornarPedido(idPedido, motivo.trim());
-      setFeedback(`Reembolso do pedido #${idPedido} solicitado com sucesso!`);
+      await cancelarPedido(idPedido, motivo.trim());
+      setFeedback(`Reembolso do pedido #${idPedido} solicitado! Aguardando aprovação do gerente.`);
     } catch (err) {
       setFeedback(err instanceof Error ? err.message : 'Erro ao solicitar reembolso.');
     } finally {
@@ -195,10 +195,14 @@ export default function MeusPedidos() {
               const entrega = entregasPorPedido[pedido.id];
               const estado = entrega?.estadoEntrega;
               const pedidoCancelado = pedido.status === 'Cancelado';
+              const reembolsoPendente =
+                pedido.status === 'Reembolso pendente' ||
+                pedido.estadoBackend === 'CANCELAMENTO_SOLICITADO';
               const entregaEfetuada = estado === 'ENTREGA_FEITA' || pedido.status === 'Entregue';
               const cancelada = estado === 'CANCELADA' || pedidoCancelado;
               const pagamentoPendente =
                 !pedidoCancelado &&
+                !reembolsoPendente &&
                 !entregaEfetuada &&
                 Boolean(pedido.urlPagamento) &&
                 (!pedido.estadoPagamento || pedido.estadoPagamento.toUpperCase() === 'PENDENTE');
@@ -211,15 +215,17 @@ export default function MeusPedidos() {
 
               const labelStatus = pedidoCancelado
                 ? 'Pedido cancelado'
-                : estado === 'EM_ENTREGA'
-                  ? 'Em rota de entrega'
-                  : estado === 'ENTREGA_FEITA'
-                    ? 'Entrega efetuada'
-                    : estado === 'CANCELADA'
-                      ? 'Entrega cancelada'
-                      : pedido.status === 'Confirmado'
-                        ? 'Em separação'
-                        : pedido.status;
+                : reembolsoPendente
+                  ? 'Reembolso pendente'
+                  : estado === 'EM_ENTREGA'
+                    ? 'Em rota de entrega'
+                    : estado === 'ENTREGA_FEITA'
+                      ? 'Entrega efetuada'
+                      : estado === 'CANCELADA'
+                        ? 'Entrega cancelada'
+                        : pedido.status === 'Confirmado'
+                          ? 'Em separação'
+                          : pedido.status;
 
               return (
                 <div
@@ -242,9 +248,11 @@ export default function MeusPedidos() {
                         className={`rounded-[5px] border px-3 py-1.5 text-[13px] font-bold ${
                           cancelada
                             ? 'border-[#FF5555] bg-[#3F0909] text-[#FF6666]'
-                            : estado === 'ENTREGA_FEITA'
-                              ? 'border-[#4ADE80] bg-[#123524] text-[#4ADE80]'
-                              : 'border-[#FFB26B] bg-[#2A0A0A] text-[#FFB26B]'
+                            : reembolsoPendente
+                              ? 'border-[#FFB26B] bg-[#2A1A0A] text-[#FFB26B]'
+                              : estado === 'ENTREGA_FEITA'
+                                ? 'border-[#4ADE80] bg-[#123524] text-[#4ADE80]'
+                                : 'border-[#FFB26B] bg-[#2A0A0A] text-[#FFB26B]'
                         }`}
                       >
                         {labelStatus}
@@ -295,7 +303,7 @@ export default function MeusPedidos() {
                         </button>
                       )}
 
-                      {!pedidoCancelado && !entregaEfetuada && (
+                      {!pedidoCancelado && !reembolsoPendente && !entregaEfetuada && (
                         <button
                           disabled={processandoId === pedido.id}
                           onClick={() => handleCancelarPedido(pedido.id, pagamentoPendente)}
@@ -309,10 +317,10 @@ export default function MeusPedidos() {
                         </button>
                       )}
 
-                      {!pedidoCancelado && entregaEfetuada && (
+                      {!pedidoCancelado && !reembolsoPendente && entregaEfetuada && (
                         <button
                           disabled={processandoId === pedido.id}
-                          onClick={() => handleEstornarPedido(pedido.id)}
+                          onClick={() => handleSolicitarReembolso(pedido.id)}
                           className="h-[40px] cursor-pointer rounded-[5px] border border-[#FFB26B] bg-[#2A1A0A] px-4 text-[12px] font-bold tracking-wide text-[#FFB26B] transition-colors hover:bg-[#3D250E] disabled:opacity-50"
                         >
                           {processandoId === pedido.id ? 'PROCESSANDO...' : 'SOLICITAR REEMBOLSO'}
@@ -320,7 +328,7 @@ export default function MeusPedidos() {
                       )}
                     </div>
 
-                    {entrega && !cancelada && entrega.confirmacaoCliente !== true && (
+                    {entrega && !cancelada && !reembolsoPendente && entrega.confirmacaoCliente !== true && (
                       <div className="flex gap-3">
                         <button
                           disabled={processandoId === pedido.id}

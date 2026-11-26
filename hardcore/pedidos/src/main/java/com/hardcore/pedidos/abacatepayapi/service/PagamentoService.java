@@ -169,13 +169,6 @@ public class PagamentoService {
             );
         }
 
-        if (pedido.getEstado() == EstadoCompraEnum.ENTREGUE) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Não é possível solicitar cancelamento ou reembolso de um pedido já entregue."
-            );
-        }
-
         if (pedido.getEstadoPagamento() != EstadoPagamentoEnum.PAGO) {
             if (pedido.getAbacatePayCheckoutId() != null) {
                 try {
@@ -243,6 +236,13 @@ public class PagamentoService {
 
     @Transactional
     public PedidoResponseDTO estornarPagamento(Long pedidoId, String motivo) {
+        Authentication autenticacao = SecurityContextHolder.getContext().getAuthentication();
+        boolean gerenteOuAdmin = autenticacao != null && autenticacao.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_GERENTE") || a.getAuthority().equals("ROLE_ADMIN"));
+        if (!gerenteOuAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas gerente ou admin pode estornar diretamente.");
+        }
+
         Pedido pedido = buscarPedido(pedidoId);
         validarAcessoAoPedido(pedido);
 
