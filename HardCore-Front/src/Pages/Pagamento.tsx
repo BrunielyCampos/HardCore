@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { QRCodeCanvas } from 'qrcode.react';
 import HeaderSimples from '../Componentes/HeaderSimples/HeaderSimples';
 import Footer from '../Componentes/Footer/FooterPagamento';
@@ -23,12 +23,27 @@ const STATUS_PAGO = [
   'SETTLED',
 ];
 
+const STATUS_CANCELADO = ['CANCELADO', 'CANCELLED', 'ESTORNADO', 'REFUNDED'];
+
+interface PagamentoLocationState {
+  retomarPagamento?: boolean;
+  pedido?: Pedido;
+}
+
 function pagamentoConfirmado(estadoPagamento?: string, estadoPedido?: string): boolean {
   const valores = [estadoPagamento, estadoPedido]
     .filter((v): v is string => Boolean(v && v.trim()))
     .map((v) => v.trim().toUpperCase());
 
   return valores.some((valor) => STATUS_PAGO.includes(valor));
+}
+
+function pagamentoCancelado(estadoPagamento?: string, estadoPedido?: string): boolean {
+  const valores = [estadoPagamento, estadoPedido]
+    .filter((v): v is string => Boolean(v && v.trim()))
+    .map((v) => v.trim().toUpperCase());
+
+  return valores.some((valor) => STATUS_CANCELADO.includes(valor));
 }
 
 function assinaturaCarrinho(itens: ProdutoCarrinho[], valorTotal: number): string {
@@ -41,6 +56,9 @@ function assinaturaCarrinho(itens: ProdutoCarrinho[], valorTotal: number): strin
 
 export default function Pagamento() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = (location.state as PagamentoLocationState | null) ?? null;
+
   const { itens, valorTotal } = useCarrinho();
   const { criarPedido, pedidoAtivo, setPedidoAtivo, buscarPedidoBackend } = usePedidos();
   const { token } = useAuth();
@@ -53,14 +71,15 @@ export default function Pagamento() {
   const iniciouGeracaoRef = useRef(false);
   const redirecionouRef = useRef(false);
 
-const avancarParaConfirmacao = useCallback(
-  (idPedido: string) => {
-    if (redirecionouRef.current) return;
-    redirecionouRef.current = true;
-    navigate(`/confirmacao/${idPedido}`, { replace: true });
-  },
-  [navigate]
-);
+  const avancarParaConfirmacao = useCallback(
+    (idPedido: string) => {
+      if (redirecionouRef.current) return;
+      redirecionouRef.current = true;
+      setPedidoAtivo(null);
+      navigate(`/confirmacao/${idPedido}`, { replace: true });
+    },
+    [navigate, setPedidoAtivo]
+  );
 
   const consultarStatusDireto = useCallback(
     async (idPedido: string): Promise<boolean> => {
@@ -72,9 +91,9 @@ const avancarParaConfirmacao = useCallback(
         if (!res.ok) return false;
 
         const dto = await res.json();
-        await buscarPedidoBackend(idPedido);
 
         if (pagamentoConfirmado(dto?.estadoPagamento, dto?.estado)) {
+          await buscarPedidoBackend(idPedido);
           avancarParaConfirmacao(String(dto?.id ?? idPedido));
           return true;
         }
@@ -86,20 +105,36 @@ const avancarParaConfirmacao = useCallback(
     [token, buscarPedidoBackend, avancarParaConfirmacao]
   );
 
+  const consultarStatusRef = useRef(consultarStatusDireto);
+  consultarStatusRef.current = consultarStatusDireto;
+
   const pedidoCorrespondeAoCarrinhoAtual = (pedido: Pedido | null): boolean => {
     if (!pedido || !pedido.urlPagamento) return false;
+    if (pagamentoConfirmado(pedido.estadoPagamento, pedido.status)) return false;
+    if (pagamentoCancelado(pedido.estadoPagamento, pedido.status)) return false;
     const assinaturaAtual = assinaturaCarrinho(itens, valorTotal);
     const assinaturaDoPedido = assinaturaCarrinho(pedido.itens ?? [], pedido.valorTotal);
     return assinaturaAtual.length > 0 && assinaturaAtual === assinaturaDoPedido;
   };
 
   const gerarPixAutomatico = async (forcarNovo = false) => {
-    if (!forcarNovo && pedidoAtivo && pagamentoConfirmado(pedidoAtivo.estadoPagamento, pedidoAtivo.status)) {
-      avancarParaConfirmacao(pedidoAtivo.id);
+    if (state?.retomarPagamento && state.pedido?.urlPagamento) {
+      setPedidoAtivo(state.pedido);
+      if (pagamentoConfirmado(state.pedido.estadoPagamento, state.pedido.status)) {
+        avancarParaConfirmacao(state.pedido.id);
+        return;
+      }
+      setCarregando(false);
       return;
     }
 
-    if (!forcarNovo && pedidoCorrespondeAoCarrinhoAtual(pedidoAtivo)) {
+    if (
+      pedidoAtivo &&
+      (pagamentoConfirmado(pedidoAtivo.estadoPagamento, pedidoAtivo.status) ||
+        pagamentoCancelado(pedidoAtivo.estadoPagamento, pedidoAtivo.status))
+    ) {
+      setPedidoAtivo(null);
+    } else if (!forcarNovo && pedidoCorrespondeAoCarrinhoAtual(pedidoAtivo)) {
       setCarregando(false);
       return;
     }
@@ -129,12 +164,10 @@ const avancarParaConfirmacao = useCallback(
     if (iniciouGeracaoRef.current) return;
     iniciouGeracaoRef.current = true;
     gerarPixAutomatico(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const idPedidoAtual = pedidoAtivo?.id;
 
-  // Verifica periodicamente no back-end se o pagamento já foi confirmado
   useEffect(() => {
     if (!idPedidoAtual || carregando || erro || redirecionouRef.current) return;
 
@@ -142,22 +175,22 @@ const avancarParaConfirmacao = useCallback(
 
     const checar = async () => {
       if (!ativo || redirecionouRef.current) return;
-      await consultarStatusDireto(idPedidoAtual);
+      await consultarStatusRef.current(idPedidoAtual);
     };
 
     checar();
-    const intervalo = setInterval(checar, 2500);
+    const intervalo = setInterval(checar, 3000);
 
     return () => {
       ativo = false;
       clearInterval(intervalo);
     };
-  }, [idPedidoAtual, carregando, erro, consultarStatusDireto]);
+  }, [idPedidoAtual, carregando, erro]);
 
   const handleVerificarAgora = async () => {
     if (!idPedidoAtual || verificandoAgora) return;
     setVerificandoAgora(true);
-    await consultarStatusDireto(idPedidoAtual);
+    await consultarStatusRef.current(idPedidoAtual);
     setVerificandoAgora(false);
   };
 

@@ -18,6 +18,7 @@ export interface ProdutoCarrinho {
   precoString: string;
   precoNumero: number;
   quantidade: number;
+  estoque?: number;
 }
 
 interface CarrinhoBackendDTO {
@@ -53,6 +54,14 @@ const API_PEDIDOS = '/api/pedidos';
 
 const formatarPreco = (valor: number) =>
   valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+const obterEstoqueProduto = (prod: any): number | undefined => {
+  const valor = prod?.estoque ?? prod?.quantidadeEstoque ?? prod?.qtdEstoque;
+  if (typeof valor === 'number' && !Number.isNaN(valor)) {
+    return Math.max(0, valor);
+  }
+  return undefined;
+};
 
 export function CarrinhoProvider({ children }: { children: ReactNode }) {
   const { token, usuario } = useAuth();
@@ -132,6 +141,7 @@ export function CarrinhoProvider({ children }: { children: ReactNode }) {
           precoString: formatarPreco(precoNumero),
           precoNumero,
           quantidade: item.quantidade,
+          estoque: obterEstoqueProduto(prod),
         };
       });
 
@@ -151,6 +161,26 @@ export function CarrinhoProvider({ children }: { children: ReactNode }) {
     async (produto: Omit<ProdutoCarrinho, 'quantidade' | 'precoNumero'>) => {
       if (!token || !usuario?.usuarioId) return;
 
+      const prod = produtos.find((p) => Number(p.id) === Number(produto.id));
+      const estoqueDisponivel = obterEstoqueProduto(prod) ?? produto.estoque;
+      const itemExistente = itens.find((i) => String(i.id) === String(produto.id));
+      const quantidadeAtual = itemExistente?.quantidade ?? 0;
+
+      if (estoqueDisponivel !== undefined) {
+        if (estoqueDisponivel <= 0) {
+          window.alert('Este produto está sem estoque no momento.');
+          return;
+        }
+        if (quantidadeAtual + 1 > estoqueDisponivel) {
+          window.alert(
+            `Estoque máximo atingido (${estoqueDisponivel} ${
+              estoqueDisponivel === 1 ? 'unidade disponível' : 'unidades disponíveis'
+            }).`
+          );
+          return;
+        }
+      }
+
       const id = carrinhoId ?? (await obterOuCriarCarrinho());
       if (!id) return;
 
@@ -168,7 +198,16 @@ export function CarrinhoProvider({ children }: { children: ReactNode }) {
         await recarregarCarrinho();
       }
     },
-    [token, usuario, carrinhoId, obterOuCriarCarrinho, authHeaders, recarregarCarrinho]
+    [
+      token,
+      usuario,
+      produtos,
+      itens,
+      carrinhoId,
+      obterOuCriarCarrinho,
+      authHeaders,
+      recarregarCarrinho,
+    ]
   );
 
   const alterarQuantidade = useCallback(
@@ -176,7 +215,23 @@ export function CarrinhoProvider({ children }: { children: ReactNode }) {
       const itemAtual = itens.find((i) => String(i.id) === String(id));
       if (!itemAtual || !carrinhoId) return;
 
-      const novaQuantidade = Math.max(1, itemAtual.quantidade + delta);
+      const prod = produtos.find((p) => Number(p.id) === Number(itemAtual.id));
+      const estoqueDisponivel = obterEstoqueProduto(prod) ?? itemAtual.estoque;
+
+      let novaQuantidade = Math.max(1, itemAtual.quantidade + delta);
+
+      if (delta > 0 && estoqueDisponivel !== undefined) {
+        if (itemAtual.quantidade >= estoqueDisponivel) {
+          window.alert(
+            `Estoque máximo atingido (${estoqueDisponivel} ${
+              estoqueDisponivel === 1 ? 'unidade disponível' : 'unidades disponíveis'
+            }).`
+          );
+          return;
+        }
+        novaQuantidade = Math.min(novaQuantidade, estoqueDisponivel);
+      }
+
       if (novaQuantidade === itemAtual.quantidade) return;
 
       if (itemAtual.itemCarrinhoId) {
@@ -198,7 +253,7 @@ export function CarrinhoProvider({ children }: { children: ReactNode }) {
 
       await recarregarCarrinho();
     },
-    [itens, carrinhoId, authHeaders, recarregarCarrinho]
+    [itens, produtos, carrinhoId, authHeaders, recarregarCarrinho]
   );
 
   const removerDoCarrinho = useCallback(

@@ -116,7 +116,7 @@ public class PagamentoService {
             itemPedidoRepository.deleteAll(itemPedidoRepository.findByIdPedido(pedido.getId()));
             itemPedidoRepository.saveAll(itensPedido);
 
-            String externalIdPedido = "pedido-" + pedido.getId();
+            String externalIdPedido = "pedido-" + pedido.getId() + "-" + System.currentTimeMillis();
             List<String> methods = pedido.getTipoPagamento() == TipoPagamentoEnum.PIX
                     ? List.of("PIX") : List.of("CARD");
             JsonNode data = validarResposta(abacatePayService.criarCheckout(itensCheckout, externalIdPedido, methods));
@@ -169,16 +169,12 @@ public class PagamentoService {
             );
         }
 
-        if (pedido.getEstado() == EstadoCompraEnum.ENTREGUE) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Não é possível solicitar cancelamento ou reembolso de um pedido já entregue."
-            );
-        }
-
         if (pedido.getEstadoPagamento() != EstadoPagamentoEnum.PAGO) {
             if (pedido.getAbacatePayCheckoutId() != null) {
-                validarResposta(abacatePayService.cancelarCheckout(pedido.getAbacatePayCheckoutId()));
+                try {
+                    validarResposta(abacatePayService.cancelarCheckout(pedido.getAbacatePayCheckoutId()));
+                } catch (HttpClientErrorException | ResponseStatusException ignored) {
+                }
             }
             pedido.setEstadoPagamento(EstadoPagamentoEnum.CANCELADO);
             liberarEstoque(pedido);
@@ -220,7 +216,10 @@ public class PagamentoService {
 
         if (pedido.getAbacatePayCheckoutId() != null
                 && pedido.getEstadoPagamento() != EstadoPagamentoEnum.CANCELADO) {
-            validarResposta(abacatePayService.cancelarCheckout(pedido.getAbacatePayCheckoutId()));
+            try {
+                validarResposta(abacatePayService.cancelarCheckout(pedido.getAbacatePayCheckoutId()));
+            } catch (HttpClientErrorException | ResponseStatusException ignored) {
+            }
         }
 
         pedido.setEstadoPagamento(EstadoPagamentoEnum.CANCELADO);
@@ -237,6 +236,13 @@ public class PagamentoService {
 
     @Transactional
     public PedidoResponseDTO estornarPagamento(Long pedidoId, String motivo) {
+        Authentication autenticacao = SecurityContextHolder.getContext().getAuthentication();
+        boolean gerenteOuAdmin = autenticacao != null && autenticacao.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_GERENTE") || a.getAuthority().equals("ROLE_ADMIN"));
+        if (!gerenteOuAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas gerente ou admin pode estornar diretamente.");
+        }
+
         Pedido pedido = buscarPedido(pedidoId);
         validarAcessoAoPedido(pedido);
 

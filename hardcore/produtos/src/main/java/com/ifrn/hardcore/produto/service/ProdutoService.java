@@ -124,7 +124,7 @@ public class ProdutoService {
         if (totalAvaliacoes > 0) {
             mediaAvaliacoes = avals.stream()
                     .filter(a -> a.getAvaliacao() != null)
-                    .mapToInt(AvaliacaoCliente::getAvaliacao)
+                    .mapToInt(a -> Boolean.TRUE.equals(a.getAvaliacao()) ? 1 : 0)
                     .average()
                     .orElse(0.0);
         }

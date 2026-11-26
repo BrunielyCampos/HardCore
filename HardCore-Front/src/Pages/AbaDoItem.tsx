@@ -10,27 +10,12 @@ import bannerAnuncio from '../assets/HomeAsset/RodapeAnuncio.png';
 
 interface AvaliacaoDTO {
   id: number;
-  avaliacao: number;
+  avaliacao: boolean;
   campoComentario?: string;
   produto_id: number;
   autorId?: number;
   autorTipo?: string;
 }
-
-const StarIcon = ({ filled }: { filled: boolean }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill={filled ? '#FFC107' : '#555555'}
-    className="w-4 h-4"
-  >
-    <path
-      fillRule="evenodd"
-      d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z"
-      clipRule="evenodd"
-    />
-  </svg>
-);
 
 export default function AbaDoItem() {
   const { id } = useParams();
@@ -91,9 +76,15 @@ export default function AbaDoItem() {
     );
   }
 
-  const mediaAvaliacoes = produto.mediaAvaliacoes ?? 0;
-  const totalAvaliacoes = produto.totalAvaliacoes ?? 0;
-  const estrelasPreenchidas = Math.round(mediaAvaliacoes);
+  const totalLikes = avaliacoes.filter((av) => av.avaliacao === true).length;
+  const totalDeslikes = avaliacoes.filter((av) => av.avaliacao === false).length;
+  const totalAvaliacoes = avaliacoes.length > 0 ? avaliacoes.length : (produto.totalAvaliacoes ?? 0);
+  const classificacao =
+    avaliacoes.length > 0
+      ? totalLikes >= totalDeslikes
+        ? 'Mais curtido'
+        : 'Menos curtido'
+      : produto.classificacaoAvaliacao ?? null;
 
   const precoFormatado = produto.precoVenda.toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
@@ -163,14 +154,19 @@ export default function AbaDoItem() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-0.5">
-                  {[1, 2, 3, 4, 5].map((num) => (
-                    <StarIcon key={num} filled={num <= estrelasPreenchidas} />
-                  ))}
-                </div>
-                <span className="text-[13px] font-semibold text-white">
-                  {mediaAvaliacoes.toFixed(1)}
-                </span>
+                {classificacao ? (
+                  <span
+                    className={`rounded-[5px] border px-2.5 py-0.5 text-[12px] font-bold ${
+                      classificacao === 'Mais curtido'
+                        ? 'border-[#4ADE80] bg-[#123524] text-[#4ADE80]'
+                        : 'border-[#FF5555] bg-[#3F0909] text-[#FF6666]'
+                    }`}
+                  >
+                    {classificacao === 'Mais curtido' ? '👍 Mais curtido' : '👎 Menos curtido'}
+                  </span>
+                ) : (
+                  <span className="text-[12px] text-white/60">Sem avaliações</span>
+                )}
                 <span className="text-[12px] text-white/60">
                   ({totalAvaliacoes} {totalAvaliacoes === 1 ? 'avaliação' : 'avaliações'})
                 </span>
@@ -223,16 +219,16 @@ export default function AbaDoItem() {
           </div>
         </div>
 
-        {/* Avaliações dos Clientes */}
         <section className="mx-auto mt-12 w-full max-w-[1125px] px-[40px]">
           <div className="rounded-[8px] border border-[#2A0A0A] bg-[#181818] p-6">
-            <div className="mb-4 flex items-center justify-between border-b border-[#2A0A0A] pb-3">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-[#2A0A0A] pb-3">
               <h2 className="font-['Iosevka_Charon'] text-[22px] font-bold text-white">
                 AVALIAÇÕES DE CLIENTES
               </h2>
-              <span className="text-[13px] text-white/60">
-                Média {mediaAvaliacoes.toFixed(1)} / 5.0 ({totalAvaliacoes})
-              </span>
+              <div className="flex items-center gap-4 text-[13px]">
+                <span className="font-bold text-[#4ADE80]">👍 {totalLikes} curtidas</span>
+                <span className="font-bold text-[#FF6666]">👎 {totalDeslikes} não curtidas</span>
+              </div>
             </div>
 
             {avaliacoes.length === 0 ? (
@@ -241,31 +237,35 @@ export default function AbaDoItem() {
               </p>
             ) : (
               <div className="flex flex-col gap-3">
-                {avaliacoes.map((av) => (
-                  <div
-                    key={av.id}
-                    className="flex flex-col gap-1.5 rounded-[6px] border border-[#2A0A0A] bg-[#222222] p-4"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1">
-                        {[1, 2, 3, 4, 5].map((num) => (
-                          <StarIcon key={num} filled={num <= av.avaliacao} />
-                        ))}
-                        <span className="ml-2 text-[13px] font-bold text-white">
-                          {av.avaliacao}.0
+                {avaliacoes.map((av) => {
+                  const curtiu = av.avaliacao === true;
+                  return (
+                    <div
+                      key={av.id}
+                      className="flex flex-col gap-1.5 rounded-[6px] border border-[#2A0A0A] bg-[#222222] p-4"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`rounded-[4px] border px-2.5 py-0.5 text-[12px] font-bold ${
+                            curtiu
+                              ? 'border-[#4ADE80] bg-[#123524] text-[#4ADE80]'
+                              : 'border-[#FF5555] bg-[#3F0909] text-[#FF6666]'
+                          }`}
+                        >
+                          {curtiu ? '👍 Curtiu' : '👎 Não curtiu'}
                         </span>
+                        {av.autorId && (
+                          <span className="text-[12px] text-white/50">
+                            Cliente #{av.autorId}
+                          </span>
+                        )}
                       </div>
-                      {av.autorId && (
-                        <span className="text-[12px] text-white/50">
-                          Cliente #{av.autorId}
-                        </span>
+                      {av.campoComentario && (
+                        <p className="text-[14px] text-white/85">{av.campoComentario}</p>
                       )}
                     </div>
-                    {av.campoComentario && (
-                      <p className="text-[14px] text-white/85">{av.campoComentario}</p>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
