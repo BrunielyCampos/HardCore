@@ -178,7 +178,10 @@ public class PagamentoService {
 
         if (pedido.getEstadoPagamento() != EstadoPagamentoEnum.PAGO) {
             if (pedido.getAbacatePayCheckoutId() != null) {
-                validarResposta(abacatePayService.cancelarCheckout(pedido.getAbacatePayCheckoutId()));
+                try {
+                    validarResposta(abacatePayService.cancelarCheckout(pedido.getAbacatePayCheckoutId()));
+                } catch (HttpClientErrorException | ResponseStatusException ignored) {
+                }
             }
             pedido.setEstadoPagamento(EstadoPagamentoEnum.CANCELADO);
             liberarEstoque(pedido);
@@ -220,7 +223,10 @@ public class PagamentoService {
 
         if (pedido.getAbacatePayCheckoutId() != null
                 && pedido.getEstadoPagamento() != EstadoPagamentoEnum.CANCELADO) {
-            validarResposta(abacatePayService.cancelarCheckout(pedido.getAbacatePayCheckoutId()));
+            try {
+                validarResposta(abacatePayService.cancelarCheckout(pedido.getAbacatePayCheckoutId()));
+            } catch (HttpClientErrorException | ResponseStatusException ignored) {
+            }
         }
 
         pedido.setEstadoPagamento(EstadoPagamentoEnum.CANCELADO);

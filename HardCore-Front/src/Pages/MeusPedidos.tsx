@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import HeaderSimples from '../Componentes/HeaderSimples/HeaderSimples';
 import Footer from '../Componentes/Footer/FooterPagamento';
-import { usePedidos } from '../Context/PedidoContext';
+import { usePedidos, type Pedido } from '../Context/PedidoContext';
 import { useAuth } from '../Context/AuthContext';
 import {
   type EntregaResponseDTO,
@@ -13,7 +13,8 @@ import {
 const ENDERECO_CHECKOUT_KEY = '@hardcore:endereco_checkout';
 
 export default function MeusPedidos() {
-  const { pedidos, buscarPedidoBackend, cancelarPedido, estornarPedido } = usePedidos();
+  const navigate = useNavigate();
+  const { pedidos, buscarPedidoBackend, cancelarPedido, estornarPedido, setPedidoAtivo } = usePedidos();
   const { token } = useAuth();
 
   const [entregasPorPedido, setEntregasPorPedido] = useState<Record<string, EntregaResponseDTO | null>>({});
@@ -83,13 +84,25 @@ export default function MeusPedidos() {
     }
   };
 
-  const handleCancelarPedido = async (idPedido: string) => {
-    if (!window.confirm(`Deseja realmente cancelar o pedido #${idPedido}?`)) return;
+  const handleConcluirPagamento = (pedido: Pedido) => {
+    setPedidoAtivo(pedido);
+    navigate('/pagamento', { state: { retomarPagamento: true, pedido } });
+  };
+
+  const handleCancelarPedido = async (idPedido: string, pagamentoPendente: boolean) => {
+    const mensagem = pagamentoPendente
+      ? `Deseja realmente cancelar o pagamento do pedido #${idPedido}?`
+      : `Deseja realmente cancelar o pedido #${idPedido}?`;
+    if (!window.confirm(mensagem)) return;
     try {
       setProcessandoId(idPedido);
       setFeedback(null);
       await cancelarPedido(idPedido);
-      setFeedback(`Pedido #${idPedido} cancelado com sucesso!`);
+      setFeedback(
+        pagamentoPendente
+          ? `Pagamento do pedido #${idPedido} cancelado com sucesso!`
+          : `Pedido #${idPedido} cancelado com sucesso!`
+      );
     } catch (err) {
       setFeedback(err instanceof Error ? err.message : 'Erro ao cancelar pedido.');
     } finally {
@@ -184,6 +197,12 @@ export default function MeusPedidos() {
               const pedidoCancelado = pedido.status === 'Cancelado';
               const entregaEfetuada = estado === 'ENTREGA_FEITA' || pedido.status === 'Entregue';
               const cancelada = estado === 'CANCELADA' || pedidoCancelado;
+              const pagamentoPendente =
+                !pedidoCancelado &&
+                !entregaEfetuada &&
+                Boolean(pedido.urlPagamento) &&
+                (!pedido.estadoPagamento || pedido.estadoPagamento.toUpperCase() === 'PENDENTE');
+
               const enderecoExibicao =
                 entrega?.enderecoDestino ||
                 pedido.enderecoDestino ||
@@ -231,12 +250,14 @@ export default function MeusPedidos() {
                         {labelStatus}
                       </span>
 
-                      <Link
-                        to={`/confirmacao/${pedido.id}`}
-                        className="flex h-[38px] items-center justify-center rounded-[5px] bg-[#333333] px-4 text-[12px] font-bold tracking-wide text-white transition-colors hover:bg-[#444444]"
-                      >
-                        VER RASTREIO
-                      </Link>
+                      {!pagamentoPendente && (
+                        <Link
+                          to={`/confirmacao/${pedido.id}`}
+                          className="flex h-[38px] items-center justify-center rounded-[5px] bg-[#333333] px-4 text-[12px] font-bold tracking-wide text-white transition-colors hover:bg-[#444444]"
+                        >
+                          VER RASTREIO
+                        </Link>
+                      )}
                     </div>
                   </div>
 
@@ -264,13 +285,27 @@ export default function MeusPedidos() {
 
                   <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#2A0A0A] pt-4">
                     <div className="flex flex-wrap gap-3">
+                      {pagamentoPendente && (
+                        <button
+                          disabled={processandoId === pedido.id}
+                          onClick={() => handleConcluirPagamento(pedido)}
+                          className="h-[40px] cursor-pointer rounded-[5px] bg-[#00C016] px-4 text-[12px] font-bold tracking-wide text-black transition-colors hover:bg-[#00a613] disabled:opacity-50"
+                        >
+                          CONCLUIR PAGAMENTO
+                        </button>
+                      )}
+
                       {!pedidoCancelado && !entregaEfetuada && (
                         <button
                           disabled={processandoId === pedido.id}
-                          onClick={() => handleCancelarPedido(pedido.id)}
+                          onClick={() => handleCancelarPedido(pedido.id, pagamentoPendente)}
                           className="h-[40px] cursor-pointer rounded-[5px] border border-[#FF5555] bg-[#2A0A0A] px-4 text-[12px] font-bold tracking-wide text-[#FF7070] transition-colors hover:bg-[#3F0909] disabled:opacity-50"
                         >
-                          {processandoId === pedido.id ? 'PROCESSANDO...' : 'CANCELAR PEDIDO'}
+                          {processandoId === pedido.id
+                            ? 'PROCESSANDO...'
+                            : pagamentoPendente
+                              ? 'CANCELAR PAGAMENTO'
+                              : 'CANCELAR PEDIDO'}
                         </button>
                       )}
 
