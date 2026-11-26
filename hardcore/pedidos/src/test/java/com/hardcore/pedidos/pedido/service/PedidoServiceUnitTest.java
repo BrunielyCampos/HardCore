@@ -19,6 +19,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
+import com.hardcore.pedidos.itempedido.model.ItemPedido;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -36,6 +37,7 @@ class PedidoServiceUnitTest {
         pedidoRepo = new FakePedidoRepository();
 
         PedidoMapper mapper = new PedidoMapper() {
+
             @Override
             public Pedido toEntity(PedidoRequestDTO dto) {
                 Pedido p = new Pedido();
@@ -47,12 +49,32 @@ class PedidoServiceUnitTest {
                 p.setEstadoPagamento(EstadoPagamentoEnum.PENDENTE);
                 return p;
             }
+
+            @Override
+            public PedidoResponseDTO.ItemPedidoDTO toItemDTO(ItemPedido item) {
+                return new PedidoResponseDTO.ItemPedidoDTO();
+            }
+
+            @Override
+            public List<PedidoResponseDTO.ItemPedidoDTO> toItemDTOList(
+                    List<ItemPedido> itens) {
+                return new ArrayList<>();
+            }
+
             @Override
             public PedidoResponseDTO toDTO(Pedido p) {
                 return new PedidoResponseDTO(
-                        p.getId(), p.getIdCliente(), p.getValorCompra(), null,
-                        p.getEstado(), p.getTipoPagamento(), p.getEstadoPagamento(),
-                        p.getAbacatePayCheckoutId(), p.getUrlPagamento(), p.getIdEntregador()
+                        p.getId(),
+                        p.getIdCliente(),
+                        p.getValorCompra(),
+                        null,
+                        p.getEstado(),
+                        p.getTipoPagamento(),
+                        p.getEstadoPagamento(),
+                        p.getAbacatePayCheckoutId(),
+                        p.getUrlPagamento(),
+                        p.getIdEntregador(),
+                        new ArrayList<>()
                 );
             }
         };
