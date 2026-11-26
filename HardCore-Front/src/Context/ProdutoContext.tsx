@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 
 export type SecaoVitrine = 'Destaque' | 'Oferta' | 'Nenhuma';
+export type ClassificacaoAvaliacao = 'Mais curtido' | 'Menos curtido' | null;
 
 export interface Produto {
   id: string;
@@ -19,6 +20,7 @@ export interface Produto {
   secaoVitrine: SecaoVitrine;
   mediaAvaliacoes?: number;
   totalAvaliacoes?: number;
+  classificacaoAvaliacao?: ClassificacaoAvaliacao;
 }
 
 interface ProdutoBackendDTO {
@@ -79,6 +81,14 @@ function removerMetadados(id: string) {
   localStorage.setItem(META_STORAGE_KEY, JSON.stringify(atual));
 }
 
+function obterClassificacaoAvaliacao(
+  media: number,
+  total: number
+): ClassificacaoAvaliacao {
+  if (total <= 0) return null;
+  return media >= 3 ? 'Mais curtido' : 'Menos curtido';
+}
+
 const ProdutoContext = createContext<ProdutoContextData>({} as ProdutoContextData);
 
 export function ProdutoProvider({ children }: { children: ReactNode }) {
@@ -116,6 +126,9 @@ export function ProdutoProvider({ children }: { children: ReactNode }) {
       const combinados: Produto[] = listaBack.map((p) => {
         const idStr = String(p.id);
         const meta = metas[idStr] || {};
+        const mediaAvaliacoes = Number(p.mediaAvaliacoes ?? 0);
+        const totalAvaliacoes = Number(p.totalAvaliacoes ?? 0);
+
         return {
           id: idStr,
           nome: p.nome,
@@ -129,8 +142,9 @@ export function ProdutoProvider({ children }: { children: ReactNode }) {
           status: meta.status || 'Publicado',
           imagemPrincipal: p.imagemPrincipal || 'https://placehold.co/400x400/1c1c1f/ffffff?text=HardCore',
           secaoVitrine: meta.secaoVitrine || 'Oferta',
-          mediaAvaliacoes: Number(p.mediaAvaliacoes ?? 0),
-          totalAvaliacoes: Number(p.totalAvaliacoes ?? 0),
+          mediaAvaliacoes,
+          totalAvaliacoes,
+          classificacaoAvaliacao: obterClassificacaoAvaliacao(mediaAvaliacoes, totalAvaliacoes),
         };
       });
 
