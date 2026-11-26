@@ -10,7 +10,7 @@ import bannerAnuncio from '../assets/HomeAsset/RodapeAnuncio.png';
 
 interface AvaliacaoDTO {
   id: number;
-  avaliacao: number;
+  avaliacao: boolean;
   campoComentario?: string;
   produto_id: number;
   autorId?: number;
@@ -76,8 +76,8 @@ export default function AbaDoItem() {
     );
   }
 
-  const totalLikes = avaliacoes.filter((av) => av.avaliacao >= 3).length;
-  const totalDeslikes = avaliacoes.filter((av) => av.avaliacao < 3).length;
+  const totalLikes = avaliacoes.filter((av) => av.avaliacao === true).length;
+  const totalDeslikes = avaliacoes.filter((av) => av.avaliacao === false).length;
   const totalAvaliacoes = avaliacoes.length > 0 ? avaliacoes.length : (produto.totalAvaliacoes ?? 0);
   const classificacao =
     avaliacoes.length > 0
@@ -238,7 +238,7 @@ export default function AbaDoItem() {
             ) : (
               <div className="flex flex-col gap-3">
                 {avaliacoes.map((av) => {
-                  const curtiu = av.avaliacao >= 3;
+                  const curtiu = av.avaliacao === true;
                   return (
                     <div
                       key={av.id}

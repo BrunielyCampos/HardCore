@@ -17,7 +17,7 @@ interface ItemAvaliacaoModal {
   produtoId: number;
   nome: string;
   imagem?: string;
-  voto: 5 | 1 | null;
+  voto: boolean | null;
   comentario: string;
 }
 
@@ -106,7 +106,7 @@ export default function MeusPedidos() {
   const handleEnviarAvaliacoes = async () => {
     const votados = itensAvaliacao.filter((item) => item.voto !== null);
     if (votados.length === 0) {
-      setFeedback('Selecione Like ou Deslike em pelo menos um produto para enviar.');
+      setFeedback('Selecione Curtir ou Não curti em pelo menos um produto para enviar.');
       return;
     }
 
@@ -358,7 +358,7 @@ export default function MeusPedidos() {
                               ? 'border-[#FFB26B] bg-[#2A1A0A] text-[#FFB26B]'
                               : estado === 'ENTREGA_FEITA'
                                 ? 'border-[#4ADE80] bg-[#123524] text-[#4ADE80]'
-                                : 'border-[#FFB26B] bg-[#2A0A0A] text-[#FFB26B]'
+                                : 'border-[#FFB26B] bg-[#2A1A0A] text-[#FFB26B]'
                         }`}
                       >
                         {labelStatus}
@@ -503,11 +503,11 @@ export default function MeusPedidos() {
                       type="button"
                       onClick={() =>
                         setItensAvaliacao((prev) =>
-                          prev.map((it, i) => (i === idx ? { ...it, voto: 5 } : it))
+                          prev.map((it, i) => (i === idx ? { ...it, voto: true } : it))
                         )
                       }
                       className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-[5px] border py-2.5 text-[13px] font-bold transition-colors ${
-                        item.voto === 5
+                        item.voto === true
                           ? 'border-[#4ADE80] bg-[#123524] text-[#4ADE80]'
                           : 'border-[#333333] bg-[#262626] text-white/80 hover:border-[#4ADE80]'
                       }`}
@@ -519,11 +519,11 @@ export default function MeusPedidos() {
                       type="button"
                       onClick={() =>
                         setItensAvaliacao((prev) =>
-                          prev.map((it, i) => (i === idx ? { ...it, voto: 1 } : it))
+                          prev.map((it, i) => (i === idx ? { ...it, voto: false } : it))
                         )
                       }
                       className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-[5px] border py-2.5 text-[13px] font-bold transition-colors ${
-                        item.voto === 1
+                        item.voto === false
                           ? 'border-[#FF5555] bg-[#3F0909] text-[#FF6666]'
                           : 'border-[#333333] bg-[#262626] text-white/80 hover:border-[#FF5555]'
                       }`}
