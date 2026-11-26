@@ -3,21 +3,17 @@ import { Link } from 'react-router-dom';
 import { useCarrinho } from '../../Context/CarrinhoContext';
 import { useAuth } from '../../Context/AuthContext';
 import DepartamentoButton from '../BotoesHeader/DepartamentoButton';
-import CuponsButton from '../BotoesHeader/CuponsButton';
 import MaisVendidoButton from '../BotoesHeader/MaisVendidosButton';
 import DepartamentoDropdown from '../BotoesHeader/DepartamentoDropdown';
 
 import logoHardcore from './HeaderAnimadoAssets/Hardocre 1.png';
 import manchaPreta from './HeaderAnimadoAssets/image 8.png';
-import iconLocal from './HeaderAnimadoAssets/icon-park-outline_local.svg';
 import iconSearch from './HeaderAnimadoAssets/andrsrxn_search.svg';
 import iconUser from './HeaderAnimadoAssets/healthicons_ui-user-profile.svg';
 import iconCart from './HeaderAnimadoAssets/ant-design_shopping-cart-outlined.svg';
 
 import iconDeptWhite from '../BotoesHeader/AssetsBotao/flowbite_bars-from-left-outline-1.svg';
 import iconDeptBlack from '../BotoesHeader/AssetsBotao/flowbite_bars-from-left-outline.svg';
-import iconCupomWhite from '../BotoesHeader/AssetsBotao/fluent-mdl2_coupon-1.svg';
-import iconCupomBlack from '../BotoesHeader/AssetsBotao/fluent-mdl2_coupon.svg';
 import iconVendidosWhite from '../BotoesHeader/AssetsBotao/iconmind_best-seller-outline-thin-1.svg';
 import iconVendidosBlack from '../BotoesHeader/AssetsBotao/iconmind_best-seller-outline-thin.svg';
 
@@ -76,14 +72,6 @@ export default function HeaderAnimado() {
       <div className="relative z-20 flex flex-col justify-center items-center gap-[15px] w-full max-w-[1000px] ml-[150px]">
         {/* Linha 1: Input e Acessos */}
         <div className="flex items-center justify-center gap-[30px] w-full">
-          <div className="flex items-center gap-[10px]">
-            <img src={iconLocal} alt="Local" className="h-[36px] w-[36px] object-contain" />
-            <div className="flex flex-col">
-              <span className="font-['Inter'] text-[15px] font-semibold text-white leading-tight">Enviar para:</span>
-              <span className="font-['Inter'] text-[13px] font-light italic text-white leading-tight">Digite o CEP</span>
-            </div>
-          </div>
-
           <div className="flex h-[40px] w-[380px] items-center gap-[14px] rounded-tl-[20px] rounded-br-[20px] rounded-bl-[5px] bg-white px-[15px] shadow-lg">
             <img src={iconSearch} alt="Buscar" className="h-[20px] w-[20px] object-contain opacity-70" />
             <input type="text" placeholder="Buscar produtos" className="w-full bg-transparent font-['Inter'] text-[16px] font-extralight italic text-black placeholder:text-black/40 focus:outline-none" />
@@ -199,17 +187,27 @@ export default function HeaderAnimado() {
         </div>
 
         {/* Linha 2: Botões */}
-        <div className="flex items-center justify-center gap-[20px] w-full mr-[120px]">
+        <div className="flex items-center justify-center gap-[20px] w-full mr-[280px]">
           <div className="relative">
-            <DepartamentoButton label="Departamento" iconWhite={iconDeptWhite} iconBlack={iconDeptBlack} isOpen={isDepartamentoOpen} onClick={() => setIsDepartamentoOpen(!isDepartamentoOpen)} />
-           <DepartamentoDropdown
+            <DepartamentoButton
+              label="Departamento"
+              iconWhite={iconDeptWhite}
+              iconBlack={iconDeptBlack}
+              isOpen={isDepartamentoOpen}
+              onClick={() => setIsDepartamentoOpen(!isDepartamentoOpen)}
+            />
+            <DepartamentoDropdown
               isOpen={isDepartamentoOpen}
               onClose={() => setIsDepartamentoOpen(false)}
             />
           </div>
-          <CuponsButton label="Cupons" iconWhite={iconCupomWhite} iconBlack={iconCupomBlack} />
+
           <Link to="/mais-vendidos" className="pointer-events-auto">
-            <MaisVendidoButton label="Mais vendidos" iconWhite={iconVendidosWhite} iconBlack={iconVendidosBlack} />
+            <MaisVendidoButton
+              label="Mais vendidos"
+              iconWhite={iconVendidosWhite}
+              iconBlack={iconVendidosBlack}
+            />
           </Link>
 
           {isEntregador && (
