@@ -116,7 +116,7 @@ public class PagamentoService {
             itemPedidoRepository.deleteAll(itemPedidoRepository.findByIdPedido(pedido.getId()));
             itemPedidoRepository.saveAll(itensPedido);
 
-            String externalIdPedido = "pedido-" + pedido.getId();
+            String externalIdPedido = "pedido-" + pedido.getId() + "-" + System.currentTimeMillis();
             List<String> methods = pedido.getTipoPagamento() == TipoPagamentoEnum.PIX
                     ? List.of("PIX") : List.of("CARD");
             JsonNode data = validarResposta(abacatePayService.criarCheckout(itensCheckout, externalIdPedido, methods));
