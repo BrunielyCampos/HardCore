@@ -69,8 +69,9 @@ class CarrinhoServiceUnitTest {
         assertEquals(1, fakeRepository.getQuantidadeSalvos());
     }
 
+
     @Test
-    @DisplayName("Não deve criar outro carrinho para cliente que já possui um")
+    @DisplayName("Deve retornar o carrinho existente sem criar outro")
     void naoDeveCriarCarrinhoDuplicado() {
 
         Carrinho existente = new Carrinho();
@@ -82,13 +83,15 @@ class CarrinhoServiceUnitTest {
         CarrinhoRequestDTO request = new CarrinhoRequestDTO();
         request.setIdCliente(1L);
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> carrinhoService.criarCarrinho(request)
-        );
+        CarrinhoResponseDTO response =
+                carrinhoService.criarCarrinho(request);
 
+        assertNotNull(response);
+        assertEquals(existente.getId(), response.getId());
+        assertEquals(existente.getIdCliente(), response.getIdCliente());
         assertEquals(0, fakeRepository.getQuantidadeSalvos());
     }
+
 
     @Test
     @DisplayName("Deve buscar carrinho existente pelo ID do cliente")
