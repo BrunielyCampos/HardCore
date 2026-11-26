@@ -28,6 +28,7 @@ export default function Confirmacao() {
   const [feedbackEntrega, setFeedbackEntrega] = useState<string | null>(null);
 
   const carregouInicialRef = useRef<string | null>(null);
+  const limpouCarrinhoRef = useRef(false);
   const pedido = obterPedido(id || '');
 
   const atualizarTudo = useCallback(async () => {
@@ -42,8 +43,11 @@ export default function Confirmacao() {
   }, [id, buscarPedidoBackend, token]);
 
   useEffect(() => {
+    if (limpouCarrinhoRef.current) return;
+    limpouCarrinhoRef.current = true;
     limparCarrinho();
-  }, [limparCarrinho]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!id || carregouInicialRef.current === id) return;
@@ -91,11 +95,14 @@ export default function Confirmacao() {
 
   const step1Ativo = !cancelada && pagamentoConfirmado;
   const step2Ativo =
-    !cancelada && (estadoEntrega === 'EM_ENTREGA' || estadoEntrega === 'ENTREGA_FEITA');
+    !cancelada &&
+    (estadoEntrega === 'PENDENTE' ||
+      estadoEntrega === 'EM_ENTREGA' ||
+      estadoEntrega === 'ENTREGA_FEITA');
   const step3Ativo = !cancelada && estadoEntrega === 'ENTREGA_FEITA';
 
   const labelStatusAtual = (() => {
-    if (estadoEntrega === 'EM_ENTREGA') return 'Em rota de entrega';
+    if (estadoEntrega === 'PENDENTE' || estadoEntrega === 'EM_ENTREGA') return 'Em rota de entrega';
     if (estadoEntrega === 'ENTREGA_FEITA') return 'Entrega finalizada';
     if (estadoEntrega === 'CANCELADA') return 'Entrega cancelada';
     if (!pagamentoConfirmado) return 'Aguardando pagamento';

@@ -202,7 +202,10 @@ export default function HeaderAnimado() {
         <div className="flex items-center justify-center gap-[20px] w-full mr-[120px]">
           <div className="relative">
             <DepartamentoButton label="Departamento" iconWhite={iconDeptWhite} iconBlack={iconDeptBlack} isOpen={isDepartamentoOpen} onClick={() => setIsDepartamentoOpen(!isDepartamentoOpen)} />
-            <DepartamentoDropdown isOpen={isDepartamentoOpen} />
+           <DepartamentoDropdown
+              isOpen={isDepartamentoOpen}
+              onClose={() => setIsDepartamentoOpen(false)}
+            />
           </div>
           <CuponsButton label="Cupons" iconWhite={iconCupomWhite} iconBlack={iconCupomBlack} />
           <Link to="/mais-vendidos" className="pointer-events-auto">

@@ -7,5 +7,6 @@ public interface RotasPedido {
     String LISTAR_POR_CLIENTE = PEDIDO_BASE + "/cliente/{idCliente}";
     String ATUALIZAR_STATUS = PEDIDO_BASE + "/{id}/status";
     String CANCELAR = PEDIDO_BASE + "/{id}/cancelar";
+    String CONFIRMAR_REEMBOLSO = PEDIDO_BASE + "/{id}/confirmar-reembolso";
     String ATRIBUIR_ENTREGADOR = PEDIDO_BASE + "/{id}/entregador";
 }

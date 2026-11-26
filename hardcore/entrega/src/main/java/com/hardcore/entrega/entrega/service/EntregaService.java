@@ -23,19 +23,18 @@ public class EntregaService {
     private final UsuarioClient usuarioClient;
     private final com.hardcore.entrega.rabbitmq.EntregaStatusProducer statusProducer;
 
-    public EntregaResponseDTO atribuirEntrega(EntregaRequestDTO requestDTO) {
-        usuarioClient.validarEntregador(requestDTO.getIdEntregador());
-        Entrega entrega = entregaMapper.toEntity(requestDTO);
-        Entrega salva = entregaRepository.save(entrega);
+   public EntregaResponseDTO atribuirEntrega(EntregaRequestDTO requestDTO) {
+    usuarioClient.validarEntregador(requestDTO.getIdEntregador());
+    Entrega entrega = entregaMapper.toEntity(requestDTO);
+    entrega.setEstadoEntrega(EntregaEnum.EM_ENTREGA);
+    Entrega salva = entregaRepository.save(entrega);
+    notificacaoProducer.enviarNotificacaoParaEntregador(
+        salva.getIdEntregador(), 
+        "Nova entrega atribuída para o endereço: " + salva.getEnderecoDestino()
+    );
 
-        // Comunicação Assíncrona: Notifica o entregador via RabbitMQ sem bloquear a resposta
-        notificacaoProducer.enviarNotificacaoParaEntregador(
-            salva.getIdEntregador(), 
-            "Nova entrega atribuída para o endereço: " + salva.getEnderecoDestino()
-        );
-
-        return entregaMapper.toDTO(salva);
-    }
+    return entregaMapper.toDTO(salva);
+}
 
     public EntregaResponseDTO criarEntregaDoPedido(EntregaRequestDTO requestDTO, Long idCliente) {
         var cliente = usuarioClient.buscarPorId(idCliente);

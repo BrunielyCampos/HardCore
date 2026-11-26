@@ -13,7 +13,7 @@ import {
 const ENDERECO_CHECKOUT_KEY = '@hardcore:endereco_checkout';
 
 export default function MeusPedidos() {
-  const { pedidos, buscarPedidoBackend } = usePedidos();
+  const { pedidos, buscarPedidoBackend, cancelarPedido, estornarPedido } = usePedidos();
   const { token } = useAuth();
 
   const [entregasPorPedido, setEntregasPorPedido] = useState<Record<string, EntregaResponseDTO | null>>({});
@@ -78,6 +78,35 @@ export default function MeusPedidos() {
       await carregarEntregas();
     } catch (err) {
       setFeedback(err instanceof Error ? err.message : 'Erro ao confirmar recebimento.');
+    } finally {
+      setProcessandoId(null);
+    }
+  };
+
+  const handleCancelarPedido = async (idPedido: string) => {
+    if (!window.confirm(`Deseja realmente cancelar o pedido #${idPedido}?`)) return;
+    try {
+      setProcessandoId(idPedido);
+      setFeedback(null);
+      await cancelarPedido(idPedido);
+      setFeedback(`Pedido #${idPedido} cancelado com sucesso!`);
+    } catch (err) {
+      setFeedback(err instanceof Error ? err.message : 'Erro ao cancelar pedido.');
+    } finally {
+      setProcessandoId(null);
+    }
+  };
+
+  const handleEstornarPedido = async (idPedido: string) => {
+    const motivo = window.prompt(`Informe o motivo do reembolso para o pedido #${idPedido}:`);
+    if (!motivo || !motivo.trim()) return;
+    try {
+      setProcessandoId(idPedido);
+      setFeedback(null);
+      await estornarPedido(idPedido, motivo.trim());
+      setFeedback(`Reembolso do pedido #${idPedido} solicitado com sucesso!`);
+    } catch (err) {
+      setFeedback(err instanceof Error ? err.message : 'Erro ao solicitar reembolso.');
     } finally {
       setProcessandoId(null);
     }
@@ -152,15 +181,18 @@ export default function MeusPedidos() {
             {[...pedidos].reverse().map((pedido) => {
               const entrega = entregasPorPedido[pedido.id];
               const estado = entrega?.estadoEntrega;
-              const cancelada = estado === 'CANCELADA';
+              const pedidoCancelado = pedido.status === 'Cancelado';
+              const entregaEfetuada = estado === 'ENTREGA_FEITA' || pedido.status === 'Entregue';
+              const cancelada = estado === 'CANCELADA' || pedidoCancelado;
               const enderecoExibicao =
                 entrega?.enderecoDestino ||
                 pedido.enderecoDestino ||
                 enderecoFallback ||
                 'Endereço não informado';
 
-              const labelStatus =
-                estado === 'EM_ENTREGA'
+              const labelStatus = pedidoCancelado
+                ? 'Pedido cancelado'
+                : estado === 'EM_ENTREGA'
                   ? 'Em rota de entrega'
                   : estado === 'ENTREGA_FEITA'
                     ? 'Entrega efetuada'
@@ -179,13 +211,14 @@ export default function MeusPedidos() {
                     <div className="flex flex-col gap-1">
                       <span className="text-[12px] font-bold text-[#FFB26B]">
                         PEDIDO #{pedido.id} • {new Date(pedido.dataCriacao).toLocaleString()}
+                        {pedido.estadoPagamento ? ` • PAGAMENTO: ${pedido.estadoPagamento}` : ''}
                       </span>
                       <span className="text-[24px] text-white">
                         R$ {pedido.valorTotal.toFixed(2).replace('.', ',')}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <span
                         className={`rounded-[5px] border px-3 py-1.5 text-[13px] font-bold ${
                           cancelada
@@ -229,11 +262,30 @@ export default function MeusPedidos() {
                     </div>
                   </div>
 
-                  {entrega && !cancelada && entrega.confirmacaoCliente !== true && (
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#2A0A0A] pt-4">
-                      <span className="text-[13px] text-[#B3B3B3]">
-                        Seu pedido já chegou? Confirme abaixo:
-                      </span>
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#2A0A0A] pt-4">
+                    <div className="flex flex-wrap gap-3">
+                      {!pedidoCancelado && !entregaEfetuada && (
+                        <button
+                          disabled={processandoId === pedido.id}
+                          onClick={() => handleCancelarPedido(pedido.id)}
+                          className="h-[40px] cursor-pointer rounded-[5px] border border-[#FF5555] bg-[#2A0A0A] px-4 text-[12px] font-bold tracking-wide text-[#FF7070] transition-colors hover:bg-[#3F0909] disabled:opacity-50"
+                        >
+                          {processandoId === pedido.id ? 'PROCESSANDO...' : 'CANCELAR PEDIDO'}
+                        </button>
+                      )}
+
+                      {!pedidoCancelado && entregaEfetuada && (
+                        <button
+                          disabled={processandoId === pedido.id}
+                          onClick={() => handleEstornarPedido(pedido.id)}
+                          className="h-[40px] cursor-pointer rounded-[5px] border border-[#FFB26B] bg-[#2A1A0A] px-4 text-[12px] font-bold tracking-wide text-[#FFB26B] transition-colors hover:bg-[#3D250E] disabled:opacity-50"
+                        >
+                          {processandoId === pedido.id ? 'PROCESSANDO...' : 'SOLICITAR REEMBOLSO'}
+                        </button>
+                      )}
+                    </div>
+
+                    {entrega && !cancelada && entrega.confirmacaoCliente !== true && (
                       <div className="flex gap-3">
                         <button
                           disabled={processandoId === pedido.id}
@@ -250,8 +302,8 @@ export default function MeusPedidos() {
                           NÃO RECEBI
                         </button>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               );
             })}

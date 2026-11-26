@@ -71,11 +71,13 @@ public class PedidoService {
         return pedidoMapper.toDTO(salvo);
     }
 
+    @Transactional(readOnly = true)
     public PedidoResponseDTO buscarPedidoPorId(Long id) {
         Pedido pedido = buscar(id);
         return pedidoMapper.toDTO(pedido);
     }
 
+    @Transactional(readOnly = true)
     public List<PedidoResponseDTO> listarPedidosPorCliente(Long idCliente) {
         return pedidoRepository.findByIdCliente(idCliente).stream()
             .map(pedidoMapper::toDTO)
